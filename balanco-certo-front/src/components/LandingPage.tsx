@@ -1,7 +1,5 @@
 // src/components/LandingPage.tsx
 // Versão atualizada em: 17 de Setembro de 2025
-
-import React from 'react';
 import './LandingPage.css';
 
 // IMPORTANTE: Confirme se o nome do arquivo do seu logo está correto

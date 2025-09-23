@@ -1,6 +1,4 @@
 // src/layouts/DashboardLayout.tsx
-
-import React from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import './DashboardLayout.css';

@@ -1,0 +1,4 @@
+# meu-saas-financeiro-server/.gitignore
+
+node_modules
+.env

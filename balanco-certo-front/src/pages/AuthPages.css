@@ -1,0 +1,287 @@
+/* src/pages/AuthPages.css - Estilo Focado e Limpo */
+
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f8fafc; /* Fundo cinza bem claro */
+  padding: 2rem;
+}
+
+.auth-card {
+  background-color: white;
+  padding: 3rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+  width: 100%;
+  max-width: 450px;
+  text-align: center;
+}
+
+.auth-logo-link {
+  display: block;
+  margin-bottom: -3rem;
+}
+
+.auth-logo {
+  height: 150px;
+  width: auto;
+  filter: none;
+}
+
+.auth-card h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.5rem 0;
+}
+
+.auth-card .auth-subtitle {
+  color: #64748b;
+  margin-bottom: 2.5rem;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  text-align: left;
+}
+
+.auth-form input {
+  padding: 0.9rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: #f8fafc;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.auth-form input:focus {
+  outline: none;
+  border-color: var(--verde-principal);
+  box-shadow: 0 0 0 3px rgba(0, 128, 96, 0.1);
+}
+
+.auth-button {
+  background-color: var(--verde-principal);
+  color: white;
+  border: none;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background-color 0.2s;
+}
+
+.auth-button:hover {
+  background-color: #00694e;
+}
+
+.auth-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.auth-message {
+  margin-top: 1rem;
+  font-weight: 500;
+  color: var(--verde-principal);
+}
+
+.auth-message.error {
+  color: #dc2626;
+}
+
+.auth-toggle {
+  text-align: center;
+  margin-top: 2rem;
+  color: #64748b;
+}
+
+.auth-toggle a {
+  color: var(--verde-principal);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* src/pages/AuthPages.css */
+
+/* ... (seus estilos existentes) ... */
+
+/* Estilo para o campo de data */
+input[type="date"] {
+  padding: 0.8rem 1rem;
+  color: #64748b; /* Cor para o placeholder */
+}
+
+/* Container para os botões de rádio */
+.radio-group {
+  display: flex;
+  justify-content: space-around;
+  padding: 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background-color: #f8fafc;
+}
+
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #334155;
+  cursor: pointer;
+}
+
+
+/* src/pages/AuthPages.css */
+/* ... (todo o seu CSS anterior) ... */
+
+.forgot-password-link {
+  text-align: right;
+  font-size: 0.9rem;
+  margin-top: -0.5rem; /* Puxa um pouco para cima */
+  margin-bottom: 1rem;
+}
+
+.forgot-password-link a {
+  color: #64748b;
+  text-decoration: none;
+}
+
+.forgot-password-link a:hover {
+  text-decoration: underline;
+}
+
+/* src/pages/AuthPages.css */
+/* ... (seus estilos anteriores) ... */
+
+/* Estilo para o divisor "OU" */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #94a3b8;
+  margin: 1.5rem 0;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.auth-divider:not(:empty)::before {
+  margin-right: .5em;
+}
+
+.auth-divider:not(:empty)::after {
+  margin-left: .5em;
+}
+
+/* Estilo para o botão de Login com Google */
+.google-signin-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  padding: 0.75rem; /* Um pouco menor que o botão principal */
+  font-size: 1rem;
+  font-weight: 500; /* Mais sutil que o botão principal */
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.google-signin-button:hover {
+  background-color: #f8fafc; /* Fundo cinza claro ao passar o mouse */
+}
+
+.google-logo {
+  width: 24px;
+  height: 24px;
+}
+
+/* src/pages/AuthPages.css */
+/* ... (seus estilos existentes) ... */
+
+/* Estilo para o container do checklist da senha */
+.password-criteria {
+  text-align: left;
+  font-size: 0.9rem;
+  margin-top: -0.5rem; /* Puxa um pouco para cima, para ficar mais perto do input */
+  margin-bottom: 1rem;
+  display: grid; /* Organiza em duas colunas para telas maiores */
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem 1rem;
+}
+
+.password-criteria p {
+  margin: 0;
+  color: #94a3b8; /* Cor cinza para critério não cumprido */
+  transition: color 0.3s ease;
+}
+
+/* Estilo para quando o critério é CUMPRIDO */
+.password-criteria p.valid {
+  color: var(--verde-principal); /* Cor verde! */
+}
+
+/* src/pages/AuthPages.css */
+/* ... (seus estilos existentes) ... */
+
+.confirmation-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.auth-button-outline {
+  background-color: transparent;
+  border: 2px solid #e2e8f0;
+  color: #475569;
+  padding: 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.auth-button-outline:not(:disabled):hover {
+  border-color: #cbd5e1;
+  color: var(--texto-escuro);
+}
+.auth-button-outline:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Garante que o link se pareça com o botão */
+.confirmation-actions .auth-button {
+  text-decoration: none;
+  text-align: center;
+}
+
+/* src/pages/AuthPages.css */
+/* ... (seus estilos existentes) ... */
+
+.resend-link-button {
+  background: none;
+  border: none;
+  color: var(--verde-principal);
+  text-decoration: underline;
+  cursor: pointer;
+  font-weight: 600;
+  display: block;
+  margin: 0.5rem auto 0;
+  font-size: 0.9rem;
+}

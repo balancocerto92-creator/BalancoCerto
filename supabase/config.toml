@@ -1,0 +1,17 @@
+# supabase/config.toml (VERSÃO CORRIGIDA)
+
+# A única linha realmente necessária para vincular o projeto é esta:
+project_id = "kkzxsqsgyifxupumdszb"
+
+# As configurações abaixo são padrões para desenvolvimento local
+[api]
+port = 54321
+
+[db]
+port = 54322
+
+[studio]
+port = 54323
+
+[inbucket]
+port = 54324

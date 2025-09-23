@@ -1,0 +1,35 @@
+/* src/pages/TransacoesPage.css */
+/* ... (estilos anteriores) ... */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+th, td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+th {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+td {
+  color: var(--texto-escuro);
+}
+
+.receita {
+  color: var(--verde-principal);
+  font-weight: 500;
+}
+
+.despesa {
+  color: #dc2626; /* Vermelho */
+  font-weight: 500;
+}

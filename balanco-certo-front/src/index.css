@@ -1,0 +1,16 @@
+/* src/index.css */
+
+html {
+  scroll-behavior: smooth; /* <-- ESTA É A LINHA MÁGICA QUE FAZ A ROLAGEM SUAVE */
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}

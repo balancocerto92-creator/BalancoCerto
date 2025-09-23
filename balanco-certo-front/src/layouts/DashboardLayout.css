@@ -1,0 +1,89 @@
+/* src/layouts/DashboardLayout.css */
+
+:root {
+  --sidebar-bg: #1e293b;
+  --sidebar-text: #e2e8f0;
+  --sidebar-text-hover: #ffffff;
+  --sidebar-link-active-bg: var(--verde-principal);
+  --main-bg: #f8fafc;
+}
+
+.dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 250px;
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+}
+
+.sidebar-header img {
+  height: 150px;
+}
+
+.sidebar-header span {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex-grow: 1; /* Empurra o footer para baixo */
+}
+
+.sidebar-nav a {
+  color: var(--sidebar-text);
+  text-decoration: none;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.sidebar-nav a:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--sidebar-text-hover);
+}
+
+.sidebar-nav a.active {
+  background-color: var(--sidebar-link-active-bg);
+  color: var(--sidebar-text-hover);
+}
+
+.logout-button {
+  width: 100%;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--sidebar-text);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.logout-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--sidebar-text-hover);
+}
+
+.main-content {
+  flex: 1;
+  background-color: var(--main-bg);
+  padding: 2rem;
+  overflow-y: auto;
+}

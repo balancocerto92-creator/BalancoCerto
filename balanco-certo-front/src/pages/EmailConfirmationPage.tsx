@@ -1,4 +1,6 @@
 // src/pages/EmailConfirmationPage.tsx
+
+import { useState } from 'react';
 import './AuthPages.css';
 import { Link, useSearchParams } from 'react-router-dom';
 import logoBalançoCerto from '../assets/balanco-Certo-logo.png';

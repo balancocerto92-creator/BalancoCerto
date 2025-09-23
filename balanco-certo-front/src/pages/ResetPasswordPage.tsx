@@ -17,7 +17,7 @@ const ResetPasswordPage = () => {
   // Usamos useEffect para lidar com isso quando a página carrega
   useEffect(() => {
     // Escuta por mudanças na autenticação, especificamente PASSWORD_RECOVERY
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event,) => {
       if (event === 'PASSWORD_RECOVERY') {
         // Se o evento for de recuperação de senha, a sessão contém o token de acesso
         // e o usuário já está tecnicamente logado para poder mudar a senha.

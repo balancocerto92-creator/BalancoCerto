@@ -21,7 +21,7 @@ const ForgotPasswordPage = () => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       // Esta é a URL para onde o usuário será redirecionado após clicar no link do e-mail.
       // Vamos criar essa página no próximo passo.
-      redirectTo: 'http://localhost:5173/reset-senha', 
+      redirectTo: `${window.location.origin}/reset-senha`, 
     });
 
     if (error) {

@@ -1,6 +1,6 @@
 // src/pages/DashboardPage.tsx
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js'; // <-- CORRIGIDO

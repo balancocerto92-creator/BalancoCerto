@@ -1,6 +1,6 @@
 // src/pages/RegisterPage.tsx
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import './AuthPages.css';
 import { Link, useNavigate } from 'react-router-dom';

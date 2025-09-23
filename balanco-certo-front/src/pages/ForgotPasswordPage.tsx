@@ -1,6 +1,6 @@
 // src/pages/ForgotPasswordPage.tsx
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { supabase } from '../supabaseClient';
 import './AuthPages.css';
 import { Link } from 'react-router-dom';

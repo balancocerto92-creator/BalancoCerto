@@ -1,6 +1,6 @@
 // src/pages/LoginPage.tsx
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { supabase } from '../supabaseClient';
 import './AuthPages.css';
 import { Link, useNavigate } from 'react-router-dom';

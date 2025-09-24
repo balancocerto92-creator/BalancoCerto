@@ -1,4 +1,5 @@
 // src/pages/RegisterPage.tsx
+// Versão atualizada para produção em: 24 de Setembro de 2025
 
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
@@ -13,25 +14,46 @@ const RegisterPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  // ... (o resto dos seus useState e useEffect continua igual)
-  const [passwordCriteria, setPasswordCriteria] = useState({ minLength: false, uppercase: false, number: false, specialChar: false });
+  const [passwordCriteria, setPasswordCriteria] = useState({
+    minLength: false,
+    uppercase: false,
+    number: false,
+    specialChar: false,
+  });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  // O estado 'showResendLink' e a função 'handleResendConfirmation' não são mais necessários aqui
+  const [showResendLink, setShowResendLink] = useState(false);
 
   useEffect(() => {
     setPasswordCriteria({
-      minLength: password.length >= 8, uppercase: /[A-Z]/.test(password),
-      number: /[0-9]/.test(password), specialChar: /[!@#$%^&*]/.test(password),
+      minLength: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      number: /[0-9]/.test(password),
+      specialChar: /[!@#$%^&*]/.test(password),
     });
   }, [password]);
+
+  const handleResendConfirmation = async () => {
+    setLoading(true);
+    setError('');
+    const { error } = await supabase.auth.resend({ type: 'signup', email: email });
+    if (error) {
+      setError('Erro ao reenviar e-mail. Tente novamente.');
+    } else {
+      // Usaremos navigate para a página de confirmação para dar um feedback melhor
+      navigate(`/confirmacao-email?email=${email}&resent=true`);
+    }
+    setLoading(false);
+    setShowResendLink(false);
+  };
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setShowResendLink(false);
 
-    // Validação de senha
     const allCriteriaMet = Object.values(passwordCriteria).every(Boolean);
     if (!allCriteriaMet) {
       setError('Por favor, cumpra todos os requisitos da senha.');
@@ -40,19 +62,23 @@ const RegisterPage = () => {
     }
 
     try {
-      // 1. Verificação no Backend
-      const checkEmailResponse = await axios.post('http://localhost:3001/api/check-email', { email });
+      // **MUDANÇA PRINCIPAL: URL DA API DINÂMICA**
+      // Busca a URL base da API das variáveis de ambiente (Vercel)
+      const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/check-email`;
+      
+      const checkEmailResponse = await axios.post(apiUrl, { email });
 
-      // --- MUDANÇA PRINCIPAL AQUI ---
-      // Agora, se o e-mail existir (independente de estar confirmado ou não),
-      // nós mostramos a mesma mensagem e paramos o processo.
       if (checkEmailResponse.data.exists) {
-        setError('Este e-mail já está cadastrado. Por favor, tente fazer login.');
+        if (checkEmailResponse.data.confirmed) {
+          setError('Este e-mail já está cadastrado. Por favor, faça login.');
+        } else {
+          setError('Este e-mail já foi usado, mas não foi confirmado.');
+          setShowResendLink(true);
+        }
         setLoading(false);
         return;
       }
 
-      // 2. Se o e-mail não existe, prossegue com o cadastro
       const { error: authError } = await supabase.auth.signUp({
         email: email,
         password: password,
@@ -86,7 +112,7 @@ const RegisterPage = () => {
           <img src={logoBalançoCerto} alt="Balanço Certo Logo" className="auth-logo" />
         </Link>
         <h2>Crie sua Conta</h2>
-        {/* ... (o resto do formulário continua igual) ... */}
+        <p className="auth-subtitle">Comece a organizar suas finanças hoje mesmo.</p>
         <form onSubmit={handleRegister} className="auth-form">
           <input type="text" placeholder="Seu nome completo" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
           <input type="email" placeholder="Seu e-mail" value={email} onChange={(e) => setEmail(e.target.value)} required />
@@ -110,7 +136,11 @@ const RegisterPage = () => {
         {error && 
           <p className="auth-message error">
             {error}
-            {/* A lógica e o botão de reenvio foram removidos daqui */}
+            {showResendLink && 
+              <button onClick={handleResendConfirmation} className="resend-link-button">
+                Reenviar e-mail de confirmação
+              </button>
+            }
           </p>
         }
         <p className="auth-toggle">Já tem uma conta? <Link to="/login">Faça login</Link></p>

@@ -1,35 +1,192 @@
-/* src/pages/TransacoesPage.css */
-/* ... (estilos anteriores) ... */
+/* src/pages/TransacoesPage.css - Versão com layout profissional */
+
+.transacoes-container {
+  /* O layout principal já define paddings, mas podemos ajustar se necessário */
+}
+
+/* --- CABEÇALHO DA PÁGINA --- */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.page-header h1 {
+  font-size: 2.25rem; /* 36px */
+  font-weight: 800;
+  color: var(--texto-escuro);
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.button-secondary {
+  background-color: #fff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.button-secondary:hover {
+  background-color: #f8fafc;
+}
+
+.header-actions .cta-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* --- CARDS DE RESUMO (KPIs) --- */
+.kpi-cards-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.kpi-card {
+  background-color: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+}
+
+.kpi-card .card-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #64748b;
+  margin-bottom: 0.5rem;
+}
+
+.kpi-card .card-value {
+  font-size: 1.75rem; /* 28px */
+  font-weight: 700;
+  color: var(--texto-escuro);
+}
+
+.card-value.receita {
+  color: var(--verde-principal);
+}
+
+.card-value.despesa {
+  color: #ef4444; /* Vermelho para despesas */
+}
+
+/* --- BARRA DE FILTROS --- */
+.filter-bar {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.search-input {
+  flex-grow: 1;
+  padding: 0.75rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.filter-select {
+  padding: 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background-color: #fff;
+  font-size: 1rem;
+  color: #334155;
+}
+
+/* --- TABELA E CARD DE CONTEÚDO --- */
+.content-card {
+  background-color: #fff;
+  padding: 1.5rem;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+}
 
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1rem;
 }
 
-th, td {
-  padding: 1rem;
-  text-align: left;
-  border-bottom: 1px solid #f1f5f9;
+thead {
+  background-color: var(--azul-marinho); /* Usando o azul da sua identidade */
+  color: #fff;
 }
 
 th {
-  font-size: 0.9rem;
+  padding: 1rem 1.5rem;
+  text-align: left;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: #64748b;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+th:first-child { border-radius: 8px 0 0 8px; }
+th:last-child { border-radius: 0 8px 8px 0; }
+
+tbody tr {
+  border-bottom: 1px solid #f1f5f9;
+}
+tbody tr:last-child {
+  border-bottom: none;
 }
 
 td {
+  padding: 1.25rem 1.5rem;
   color: var(--texto-escuro);
+  vertical-align: middle;
 }
 
-.receita {
-  color: var(--verde-principal);
+/* TAGS DE TIPO */
+.tag {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
   font-weight: 500;
+  text-transform: capitalize;
 }
 
-.despesa {
-  color: #dc2626; /* Vermelho */
-  font-weight: 500;
+.tag.receita {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.tag.despesa {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* ÍCONES DE AÇÃO */
+.action-icons {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.action-icons span {
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.action-icons span:hover {
+  opacity: 1;
+}
+
+/* LINHA DE "NENHUM LANÇAMENTO" */
+tbody tr td[colSpan="5"] {
+    text-align: center;
+    padding: 3rem;
+    color: #64748b;
 }

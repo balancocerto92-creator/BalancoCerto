@@ -1,0 +1,173 @@
+/* src/components/AddTransactionModal.css - VERSÃO ATUALIZADA */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(15, 23, 42, 0.6); /* Fundo um pouco mais escuro */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 480px;
+  position: relative;
+  overflow: hidden; /* Garante que o cabeçalho arredondado fique perfeito */
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Estilo do novo cabeçalho colorido */
+.modal-header-custom {
+  background-color: var(--verde-principal); /* Usando sua cor principal */
+  color: white;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-header-custom h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: white;
+  text-align: left;
+}
+
+.modal-header-custom .close-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.modal-header-custom .close-button:hover {
+  opacity: 1;
+}
+
+.transaction-form {
+  padding: 1.5rem 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 500;
+  color: #334155;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.transaction-form input[type="text"],
+.transaction-form input[type="number"] {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.transaction-form input:focus {
+  outline: none;
+  border-color: var(--verde-principal);
+  box-shadow: 0 0 0 3px rgba(0, 128, 96, 0.1);
+}
+
+/* Estilo para os botões de rádio */
+.type-selector {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.type-selector label {
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+  font-size: 1rem;
+  color: #334155;
+  padding: 0.75rem 1.25rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  width: 100%;
+  cursor: pointer;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.type-selector input[type="radio"] {
+  margin-right: 0.75rem;
+  accent-color: var(--verde-principal);
+}
+
+.type-selector label.selected {
+  border-color: var(--verde-principal);
+  background-color: #f0fdf4;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.cancel-button {
+  background-color: #f1f5f9;
+  color: #475569;
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.cancel-button:hover {
+  background-color: #e2e8f0;
+}
+
+/* Estilo do botão Salvar (cta-button) */
+.modal-actions .cta-button {
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.form-error-message {
+  text-align: center;
+  margin-top: -0.5rem;
+  margin-bottom: 1rem;
+  color: #dc2626;
+  font-size: 0.9rem;
+}

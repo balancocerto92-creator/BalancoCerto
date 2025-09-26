@@ -1,0 +1,21 @@
+/* src/pages/DashboardPage.css */
+
+/* Importa os estilos compartilhados que já criamos (cards, etc.) */
+@import './TransacoesPage.css';
+
+/* Adiciona estilos específicos para a página de Visão Geral */
+.welcome-message {
+  margin-top: -1.5rem;
+  font-size: 1.1rem;
+  color: #64748b;
+}
+
+.loading-message, .error-message {
+  padding: 2rem;
+  font-size: 1.2rem;
+  color: #64748b;
+}
+
+.dashboard-page-container .content-card {
+  padding: 2rem;
+}

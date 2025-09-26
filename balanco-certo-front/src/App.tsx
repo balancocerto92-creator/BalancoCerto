@@ -1,5 +1,5 @@
 // src/App.tsx
-// Versão atualizada em: 23 de Setembro de 2025
+// Versão com os caminhos de importação corrigidos
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
@@ -8,7 +8,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import DashboardLayout from './layouts/DashboardLayout';
 import LandingPage from './components/LandingPage';
 
-// Importação das Páginas
+// Importação das Páginas (com os caminhos corretos)
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
@@ -16,6 +16,7 @@ import EmailConfirmationPage from './pages/EmailConfirmationPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import DashboardPage from './pages/DashboardPage';
 import TransacoesPage from './pages/TransacoesPage';
+
 
 // Importação do CSS global
 import './App.css'; 
@@ -41,15 +42,8 @@ function App() {
             </ProtectedRoute>
           }
         >
-          {/* A página inicial do dashboard (Visão Geral) */}
           <Route index element={<DashboardPage />} /> 
-          
-          {/* A página de Lançamentos */}
-          <Route path="transacoes" element={<TransacoesPage />} />
-          
-          {/* Futuramente, outras páginas do dashboard virão aqui: */}
-          {/* <Route path="relatorios" element={<RelatoriosPage />} /> */}
-          {/* <Route path="configuracoes" element={<ConfiguracoesPage />} /> */}
+          <Route path="transacoes" element={<TransacoesPage />} />          
         </Route>
       </Routes>
     </BrowserRouter>

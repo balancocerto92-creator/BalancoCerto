@@ -1,8 +1,9 @@
 /* src/layouts/DashboardLayout.css */
+/* Versão atualizada em: 26 de Setembro de 2025 */
 
 :root {
   --sidebar-bg: #1e293b;
-  --sidebar-text: #e2e8f0;
+  --sidebar-text: #cbd5e1; /* Um cinza mais claro para melhor contraste */
   --sidebar-text-hover: #ffffff;
   --sidebar-link-active-bg: var(--verde-principal);
   --main-bg: #f8fafc;
@@ -14,76 +15,60 @@
 }
 
 .sidebar {
-  width: 250px;
+  width: 260px; /* Um pouco mais largo */
   background-color: var(--sidebar-bg);
   color: var(--sidebar-text);
-  display: flex;
-  flex-direction: column;
-  padding: 1.5rem;
+  display: flex; /* ESSENCIAL para o layout */
+  flex-direction: column; /* Organiza os itens em uma coluna */
+  padding: 1rem;
+  box-sizing: border-box;
 }
 
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 2.5rem;
+.sidebar .logo {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Centraliza a logo se não houver texto */
+    padding: 1rem;
+    margin-bottom: 1.5rem;
 }
 
-.sidebar-header img {
-  height: 150px;
+.sidebar .logo .logo-icon {
+    width: 200px;
+    height: auto;
 }
 
-.sidebar-header span {
-  font-size: 1.25rem;
-  font-weight: 600;
-}
-
-.sidebar-nav {
+.main-nav {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  flex-grow: 1; /* Empurra o footer para baixo */
+  flex-grow: 1; /* <-- ESTA É A LINHA MÁGICA que empurra o perfil para baixo */
 }
 
-.sidebar-nav a {
+.nav-item {
   color: var(--sidebar-text);
   text-decoration: none;
-  padding: 0.75rem 1rem;
+  padding: 0.85rem 1.5rem;
   border-radius: 8px;
   font-weight: 500;
+  display: block; /* Garante que o link ocupe toda a largura */
   transition: background-color 0.2s, color 0.2s;
 }
 
-.sidebar-nav a:hover {
-  background-color: rgba(255, 255, 255, 0.1);
+.nav-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
   color: var(--sidebar-text-hover);
 }
 
-.sidebar-nav a.active {
+/* Estilo para quando o link está ativo */
+.nav-item.active {
   background-color: var(--sidebar-link-active-bg);
-  color: var(--sidebar-text-hover);
-}
-
-.logout-button {
-  width: 100%;
-  background: none;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: var(--sidebar-text);
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s, color 0.2s;
-}
-
-.logout-button:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: var(--sidebar-text-hover);
+  color: #ffffff;
+  font-weight: 600;
 }
 
 .main-content {
   flex: 1;
   background-color: var(--main-bg);
-  padding: 2rem;
+  padding: 2.5rem;
   overflow-y: auto;
 }

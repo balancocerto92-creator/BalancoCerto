@@ -5,7 +5,7 @@ import { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
 import { supabase } from '../supabaseClient';
 import DatePicker, { registerLocale } from 'react-datepicker';
-import ptBR from 'date-fns/locale/pt-BR';
+import { ptBR } from 'date-fns/locale/pt-BR';
 import 'react-datepicker/dist/react-datepicker.css';
 import './TransacoesPage.css';
 

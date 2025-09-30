@@ -189,3 +189,82 @@
 .settings-form input[type="file"] {
     font-size: 0.9rem;
 }
+
+/* src/components/ProfileSettingsModal.css */
+/* ... (seus estilos existentes) ... */
+
+/* --- AJUSTES FINOS NOS CAMPOS DO FORMULÁRIO --- */
+
+/* Aplica um estilo base para TODOS os inputs do formulário de configurações */
+.settings-form input[type="text"],
+.settings-form input[type="password"],
+.settings-form input[type="email"],
+.settings-form input[type="date"],
+.settings-form input[type="tel"] {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  margin-top: 0.5rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+  color: #334155; /* Cor do texto digitado */
+  background-color: #f8fafc; /* Fundo levemente acinzentado */
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* Efeito de foco para todos os inputs */
+.settings-form input:focus {
+  outline: none;
+  border-color: var(--verde-principal);
+  box-shadow: 0 0 0 3px rgba(0, 128, 96, 0.1);
+}
+
+/* Remove a aparência padrão do campo de data no Chrome/Edge */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  opacity: 0.5;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+/* Garante que o texto do campo de data não fique cinza claro */
+input[type="date"] {
+  color: #334155;
+}
+
+/* src/components/ProfileSettingsModal.css */
+/* src/components/ProfileSettingsModal.css */
+/* src/components/ProfileSettingsModal.css */
+/* Adicione este código no final do arquivo */
+
+/* Container para alinhar o label com o novo componente */
+.phone-input-container {
+  margin-top: 0.5rem;
+}
+
+/* A biblioteca cria um input com a classe .PhoneInputInput.
+  Vamos estilizar ele para que fique igual aos outros inputs do formulário.
+*/
+.PhoneInputInput {
+  width: 100%;
+  padding: 0.8rem 1rem !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px !important;
+  font-size: 1rem !important;
+  box-sizing: border-box !important;
+  
+  /* Remove a borda e fundo padrão que a lib aplica no foco */
+  outline: none;
+  box-shadow: none;
+  background-color: transparent !important;
+}
+
+/* Ajusta o foco para seguir o padrão do seu app */
+.PhoneInputInput:focus {
+  border-color: var(--verde-principal, #0D9488) !important;
+}

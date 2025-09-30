@@ -1,7 +1,7 @@
-/* src/pages/TransacoesPage.css - Versão com layout profissional */
+/* src/pages/TransacoesPage.css */
 
 .transacoes-container {
-  /* O layout principal já define paddings, mas podemos ajustar se necessário */
+  /* O layout principal já define paddings */
 }
 
 /* --- CABEÇALHO DA PÁGINA --- */
@@ -13,7 +13,7 @@
 }
 
 .page-header h1 {
-  font-size: 2.25rem; /* 36px */
+  font-size: 2.25rem;
   font-weight: 800;
   color: var(--texto-escuro);
 }
@@ -69,7 +69,7 @@
 }
 
 .kpi-card .card-value {
-  font-size: 1.75rem; /* 28px */
+  font-size: 1.75rem;
   font-weight: 700;
   color: var(--texto-escuro);
 }
@@ -79,13 +79,14 @@
 }
 
 .card-value.despesa {
-  color: #ef4444; /* Vermelho para despesas */
+  color: #ef4444;
 }
 
 /* --- BARRA DE FILTROS --- */
 .filter-bar {
   display: flex;
   gap: 1rem;
+  align-items: center;
   margin-bottom: 1.5rem;
 }
 
@@ -121,7 +122,7 @@ table {
 }
 
 thead {
-  background-color: var(--azul-marinho); /* Usando o azul da sua identidade */
+  background-color: var(--azul-marinho);
   color: #fff;
 }
 
@@ -149,7 +150,6 @@ td {
   vertical-align: middle;
 }
 
-/* TAGS DE TIPO */
 .tag {
   padding: 0.25rem 0.75rem;
   border-radius: 20px;
@@ -157,36 +157,334 @@ td {
   font-weight: 500;
   text-transform: capitalize;
 }
-
 .tag.receita {
   background-color: #dcfce7;
   color: #166534;
 }
-
 .tag.despesa {
   background-color: #fee2e2;
   color: #991b1b;
 }
 
-/* ÍCONES DE AÇÃO */
 .action-icons {
   display: flex;
   gap: 1.5rem;
 }
-
 .action-icons span {
   cursor: pointer;
   opacity: 0.6;
   transition: opacity 0.2s;
 }
-
 .action-icons span:hover {
   opacity: 1;
 }
 
-/* LINHA DE "NENHUM LANÇAMENTO" */
-tbody tr td[colSpan="5"] {
-    text-align: center;
-    padding: 3rem;
-    color: #64748b;
+tbody tr td[colSpan="7"] {
+  text-align: center;
+  padding: 3rem;
+  color: #64748b;
+}
+
+/* --- PAGINAÇÃO E EXCLUSÃO EM MASSA --- */
+.pagination-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1.5rem;
+  margin-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.pagination-controls button {
+  background-color: #fff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.pagination-controls button:hover:not(:disabled) {
+  background-color: #f8fafc;
+}
+
+.pagination-controls button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button-danger {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.button-danger:hover {
+  background-color: #fecaca;
+  color: #991b1b;
+}
+
+.selected-row {
+  background-color: #f0fdf4;
+}
+
+th:first-child, td:first-child {
+  width: 1%;
+  padding-right: 0.5rem;
+}
+
+/* --- ESTILOS PARA CHECKBOX CUSTOMIZADO (VERSÃO CORRIGIDA) --- */
+.custom-checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+}
+
+.custom-checkbox input[type="checkbox"] {
+  opacity: 0;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+}
+
+.custom-checkbox span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #cbd5e1;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.custom-checkbox:hover span {
+  border-color: var(--azul-marinho);
+}
+
+thead .custom-checkbox:hover span {
+  border-color: #fff;
+}
+
+.custom-checkbox input[type="checkbox"]:checked + span {
+  background-color: var(--azul-marinho);
+  border-color: var(--azul-marinho);
+}
+
+.custom-checkbox input[type="checkbox"]:checked + span::after {
+  content: '';
+  display: block;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 3px 3px 0;
+  transform: rotate(45deg) translateY(-1px);
+}
+
+thead .custom-checkbox input[type="checkbox"]:checked + span {
+  background-color: #fff;
+  border-color: #fff;
+}
+
+thead .custom-checkbox input[type="checkbox"]:checked + span::after {
+  border-color: var(--azul-marinho);
+}
+
+
+/* --- ESTILOS PARA SELECT (DROPDOWN) CUSTOMIZADO --- */
+.custom-select-wrapper {
+  position: relative;
+}
+
+.custom-select-wrapper .filter-select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding-right: 2.5rem; 
+}
+
+.custom-select-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: 1rem;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-top: 6px solid #64748b;
+  pointer-events: none;
+  transition: border-color 0.2s;
+}
+
+.custom-select-wrapper:hover::after {
+  border-top-color: var(--azul-marinho);
+}
+
+/* src/pages/TransacoesPage.css */
+/* Adicione este código ao final do arquivo */
+
+/* --- ESTILOS PARA O CAMPO DE BUSCA COM ÍCONE --- */
+.search-wrapper {
+  position: relative;
+  flex-grow: 1; /* Faz o campo de busca ocupar o espaço disponível */
+}
+
+.search-wrapper svg {
+  position: absolute;
+  top: 50%;
+  left: 0.85rem; /* Posição do ícone */
+  transform: translateY(-50%);
+  color: #94a3b8; /* Cor cinza para o ícone */
+  pointer-events: none; /* Garante que o clique vá para o input */
+}
+
+/* Adiciona um padding à esquerda no input para o texto não ficar sobre o ícone */
+.search-wrapper .search-input {
+  padding-left: 2.5rem;
+}
+
+
+/* --- ESTILO PARA O NOVO INPUT DE MÊS --- */
+.month-input {
+  padding: 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background-color: #fff;
+  font-size: 1rem;
+  color: #334155;
+  font-family: 'Inter', sans-serif;
+}
+
+/* src/pages/TransacoesPage.css */
+/* Adicione este código ao final do arquivo */
+
+/* --- AJUSTES PARA O REACT-DATEPICKER --- */
+
+/* Garante que o input do DatePicker se pareça com os outros filtros */
+.month-input {
+  padding: 0.75rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background-color: #fff;
+  font-size: 1rem;
+  color: #334155;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+}
+
+/* Deixa o popup do calendário com um visual mais limpo e moderno */
+.react-datepicker {
+  font-family: 'Inter', sans-serif;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.react-datepicker__header {
+  background-color: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.react-datepicker__current-month, .react-datepicker__year-read-view--down-arrow {
+  font-weight: 600;
+  color: var(--texto-escuro);
+}
+
+/* Estilo dos meses */
+.react-datepicker__month-container .react-datepicker__month-wrapper .react-datepicker__month-text {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    padding: 0.5rem 0;
+    margin: 0.2rem;
+    transition: background-color 0.2s;
+}
+
+.react-datepicker__month-text:hover {
+  background-color: #f1f5f9;
+}
+
+.react-datepicker__month--selected {
+  background-color: var(--azul-marinho) !important;
+  color: white;
+  font-weight: 600;
+}
+
+.react-datepicker__navigation--previous, .react-datepicker__navigation--next {
+  top: 1rem;
+}
+
+/* Adicione este código para estilizar a tag de "Sem Categoria" */
+.no-category-tag {
+  color: #64748b;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+/* src/pages/TransacoesPage.css */
+/* Adicione este código ao final do arquivo */
+
+/* --- NOVOS ESTILOS PARA TAGS DE STATUS --- */
+.status-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+/* Adiciona um círculo colorido antes do texto */
+.status-tag::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.status-tag.pago {
+  background-color: #f0fdf4; /* Verde bem claro */
+  color: #15803d; /* Verde escuro */
+}
+.status-tag.pago::before {
+  background-color: #22c55e; /* Verde vivo */
+}
+
+.status-tag.pendente {
+  background-color: #fffbeb; /* Amarelo bem claro */
+  color: #b45309; /* Laranja escuro */
+}
+.status-tag.pendente::before {
+  background-color: #f59e0b; /* Amarelo/Laranja vivo */
+}
+
+.status-tag.vencido {
+  background-color: #fef2f2; /* Vermelho bem claro */
+  color: #b91c1c; /* Vermelho escuro */
+}
+.status-tag.vencido::before {
+  background-color: #ef4444; /* Vermelho vivo */
+}
+
+/* Ajuste no ícone de ação rápida */
+.action-icons span[title="Marcar como pago"] {
+    font-size: 1.2rem;
 }

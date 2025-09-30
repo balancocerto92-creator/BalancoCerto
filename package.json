@@ -1,5 +1,8 @@
 {
   "devDependencies": {
     "supabase": "^2.40.7"
+  },
+  "dependencies": {
+    "country-codes-list": "^2.0.0"
   }
 }

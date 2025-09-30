@@ -1,5 +1,5 @@
 // meu-saas-financeiro-server/src/index.js
-// Versão final consolidada em: 26 de Setembro de 2025
+// VERSÃO 100% COMPLETA - com status e due_date nas transações
 
 // --- 1. IMPORTAÇÕES ---
 const express = require('express');
@@ -15,8 +15,8 @@ const PORT = process.env.PORT || 3001;
 
 
 // --- 3. CONFIGURAÇÃO DE MIDDLEWARES ---
-app.use(cors()); // Habilita o CORS para permitir requisições do frontend
-app.use(express.json()); // Habilita o servidor a entender requisições com corpo em JSON
+app.use(cors());
+app.use(express.json());
 
 
 // --- 4. DEFINIÇÃO DAS ROTAS ---
@@ -48,6 +48,93 @@ app.post('/api/check-email', async (req, res) => {
     res.status(500).json({ error: 'Erro interno do servidor.' });
   }
 });
+
+
+// -- ROTAS DE CATEGORIAS --
+
+// ROTA [GET] - Listar todas as categorias da organização
+app.get('/api/categories', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Acesso não autorizado.' });
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    if (userError || !user) return res.status(401).json({ error: 'Token inválido.' });
+    const { data: profile } = await supabase.from('profiles').select('organization_id').eq('id', user.id).single();
+    if (!profile) return res.status(404).json({ error: 'Perfil não encontrado.' });
+    const { data: categories, error } = await supabase.from('categories').select('id, sequential_id, name, color').eq('organization_id', profile.organization_id).order('name', { ascending: true });
+    if (error) throw error;
+    res.status(200).json(categories);
+  } catch (error) {
+    console.error('Erro ao buscar categorias:', error.message);
+    res.status(500).json({ error: 'Erro interno ao buscar categorias.' });
+  }
+});
+
+// ROTA [POST] - Criar uma nova categoria
+app.post('/api/categories', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Acesso não autorizado.' });
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    if (userError || !user) return res.status(401).json({ error: 'Token inválido.' });
+    const { data: profile } = await supabase.from('profiles').select('organization_id').eq('id', user.id).single();
+    if (!profile) return res.status(404).json({ error: 'Perfil não encontrado.' });
+    const { name, color } = req.body;
+    if (!name) return res.status(400).json({ error: 'O nome da categoria é obrigatório.' });
+    const { data: newCategory, error } = await supabase.from('categories').insert({ name, color, user_id: user.id, organization_id: profile.organization_id }).select('id, sequential_id, name, color').single();
+    if (error) {
+      if (error.code === '23505') { return res.status(409).json({ error: 'Uma categoria com este nome já existe.' }); }
+      throw error;
+    }
+    res.status(201).json(newCategory);
+  } catch (error) {
+    console.error('Erro ao criar categoria:', error.message);
+    res.status(500).json({ error: 'Erro interno ao criar categoria.' });
+  }
+});
+
+// ROTA [PUT] - Atualizar uma categoria existente
+app.put('/api/categories/:id', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) return res.status(401).json({ error: 'Acesso não autorizado.' });
+        const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+        if (userError || !user) return res.status(401).json({ error: 'Token inválido.' });
+        const { data: profile } = await supabase.from('profiles').select('organization_id').eq('id', user.id).single();
+        if (!profile) return res.status(404).json({ error: 'Perfil não encontrado.' });
+        const { id } = req.params;
+        const { name, color } = req.body;
+        if (!name || !color) return res.status(400).json({ error: 'Nome e cor são obrigatórios.' });
+        const { data: updatedCategory, error } = await supabase.from('categories').update({ name, color }).eq('id', id).eq('organization_id', profile.organization_id).select('id, sequential_id, name, color').single();
+        if (error) throw error;
+        if (!updatedCategory) return res.status(404).json({ error: 'Categoria não encontrada ou você não tem permissão para editá-la.' });
+        res.status(200).json(updatedCategory);
+    } catch (error) {
+        console.error('Erro ao atualizar categoria:', error.message);
+        res.status(500).json({ error: 'Erro interno ao atualizar categoria.' });
+    }
+});
+
+// ROTA [DELETE] - Deletar uma categoria
+app.delete('/api/categories/:id', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) return res.status(401).json({ error: 'Acesso não autorizado.' });
+        const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+        if (userError || !user) return res.status(401).json({ error: 'Token inválido.' });
+        const { data: profile } = await supabase.from('profiles').select('organization_id').eq('id', user.id).single();
+        if (!profile) return res.status(404).json({ error: 'Perfil não encontrado.' });
+        const { id } = req.params;
+        const { error, count } = await supabase.from('categories').delete().eq('id', id).eq('organization_id', profile.organization_id);
+        if (error) throw error;
+        if (count === 0) return res.status(404).json({ error: 'Categoria não encontrada ou você não tem permissão para deletá-la.' });
+        res.status(200).json({ message: 'Categoria deletada com sucesso.' });
+    } catch (error) {
+        console.error('Erro ao deletar categoria:', error.message);
+        res.status(500).json({ error: 'Erro interno ao deletar categoria.' });
+    }
+});
+
 
 // -- ROTAS DE TRANSAÇÕES (CRUD & EXPORT) --
 
@@ -88,12 +175,21 @@ app.post('/api/transactions', async (req, res) => {
         .from('profiles').select('organization_id').eq('id', user.id).single();
       if (profileError || !profile) return res.status(404).json({ error: 'Perfil do usuário não encontrado.' });
       
-      const { description, amount, type } = req.body;
+      // --- ALTERAÇÃO AQUI ---
+      const { description, amount, type, category_id, status, due_date } = req.body;
       if (!description || !amount || !type) return res.status(400).json({ error: 'Dados incompletos.' });
   
       const { data: newTransaction, error: insertError } = await supabase
         .from('transactions')
-        .insert({ description, amount, type, organization_id: profile.organization_id })
+        .insert({ 
+            description, 
+            amount, 
+            type, 
+            category_id, 
+            status, // Novo campo
+            due_date, // Novo campo
+            organization_id: profile.organization_id 
+        })
         .select().single();
       if (insertError) throw insertError;
   
@@ -118,7 +214,8 @@ app.put('/api/transactions/:id', async (req, res) => {
       if (profileError || !profile) return res.status(404).json({ error: 'Perfil do usuário não encontrado.' });
       
       const { id } = req.params;
-      const { description, amount, type } = req.body;
+      // --- ALTERAÇÃO AQUI ---
+      const { description, amount, type, category_id, status, due_date } = req.body;
       if (!description || !amount || !type) return res.status(400).json({ error: 'Dados incompletos.' });
   
       const { data: transaction, error: transactionError } = await supabase
@@ -130,7 +227,14 @@ app.put('/api/transactions/:id', async (req, res) => {
   
       const { data: updatedTransaction, error: updateError } = await supabase
         .from('transactions')
-        .update({ description, amount, type })
+        .update({ 
+            description, 
+            amount, 
+            type, 
+            category_id,
+            status,   // Novo campo
+            due_date  // Novo campo
+        })
         .eq('id', id)
         .select().single();
       if (updateError) throw updateError;
@@ -174,9 +278,31 @@ app.delete('/api/transactions/:id', async (req, res) => {
     }
 });
 
+// Rota para Exclusão em Massa
+app.post('/api/transactions/bulk-delete', async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Acesso não autorizado.' });
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    if (userError) return res.status(401).json({ error: 'Token inválido.' });
+    const { data: profile } = await supabase.from('profiles').select('organization_id').eq('id', user.id).single();
+    if (!profile) return res.status(404).json({ error: 'Perfil não encontrado.' });
+    const { transactionIds } = req.body;
+    if (!transactionIds || !Array.isArray(transactionIds) || transactionIds.length === 0) {
+      return res.status(400).json({ error: 'A lista de IDs de transações é inválida ou está vazia.' });
+    }
+    const { error: deleteError, count } = await supabase.from('transactions').delete().eq('organization_id', profile.organization_id).in('id', transactionIds);
+    if (deleteError) throw deleteError;
+    res.status(200).json({ message: `${count} lançamento(s) deletado(s) com sucesso.` });
+  } catch (error) {
+    console.error('Erro na exclusão em massa de transações:', error.message);
+    res.status(500).json({ error: 'Erro interno ao deletar lançamentos.' });
+  }
+});
+
+
 app.get('/api/transactions/export', async (req, res) => {
   try {
-    // 1. Validação do usuário (continua a mesma)
     const token = req.headers.authorization?.split(' ')[1];
     if (!token) return res.status(401).json({ error: 'Acesso não autorizado.' });
     
@@ -187,17 +313,13 @@ app.get('/api/transactions/export', async (req, res) => {
       .from('profiles').select('organization_id').eq('id', user.id).single();
     if (profileError || !profile) return res.status(404).json({ error: 'Perfil do usuário não encontrado.' });
     
-    // 2. Busca das transações (continua a mesma)
     const { data: transactions, error: transactionsError } = await supabase
       .from('transactions')
-      .select('created_at, description, amount, type')
+      .select('created_at, description, amount, type') // A exportação pode ser mais complexa depois
       .eq('organization_id', profile.organization_id)
       .order('created_at', { ascending: false });
     if (transactionsError) throw transactionsError;
 
-    // --- MUDANÇA PRINCIPAL AQUI ---
-
-    // 3. Define os cabeçalhos e a ordem das colunas no arquivo final
     const fields = [
         { label: 'Data', value: 'created_at' },
         { label: 'Descrição', value: 'description' },
@@ -205,11 +327,9 @@ app.get('/api/transactions/export', async (req, res) => {
         { label: 'Tipo', value: 'type' }
     ];
     
-    // 4. Configura o conversor para usar PONTO E VÍRGULA (;)
     const json2csvParser = new Parser({ fields, delimiter: ';' });
     const csv = json2csvParser.parse(transactions);
 
-    // 5. Envia o arquivo para download (continua o mesmo)
     res.header('Content-Type', 'text/csv');
     res.attachment(`lancamentos-balanco-certo-${new Date().toISOString().slice(0,10)}.csv`);
     return res.status(200).send(csv);

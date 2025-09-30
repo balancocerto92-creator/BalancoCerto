@@ -1,10 +1,15 @@
 // src/components/ProfileSettingsModal.tsx
-// Versão atualizada em: 26 de Setembro de 2025
+// Versão completa e final com todos os ajustes solicitados.
 
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import type { AuthUser as User } from '@supabase/supabase-js';
-import './ProfileSettingsModal.css';
+
+// Importações da biblioteca de telefone
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css'; // Estilos base da biblioteca
+
+import './ProfileSettingsModal.css'; // Seus estilos personalizados
 
 interface ProfileSettingsModalProps {
   isOpen: boolean;
@@ -16,15 +21,17 @@ interface ProfileSettingsModalProps {
 const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({ isOpen, onClose, currentUser, onProfileUpdated }) => {
   const [loading, setLoading] = useState(false);
   
+  // Estados do formulário
   const [fullName, setFullName] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
-  
   const [birthDate, setBirthDate] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState<string | undefined>('');
+  const [documentNumber, setDocumentNumber] = useState(''); // Representa o CPF
 
+  // Busca os dados do perfil quando o modal é aberto
   useEffect(() => {
     if (isOpen && currentUser) {
       setLoading(true);
@@ -35,7 +42,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({ isOpen, onC
       const fetchProfile = async () => {
         const { data: profile, error } = await supabase
           .from('profiles')
-          .select('full_name, avatar_url, date_of_birth, phone_number')
+          .select('full_name, avatar_url, date_of_birth, phone_number, document_number')
           .eq('id', currentUser.id)
           .single();
 
@@ -47,6 +54,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({ isOpen, onC
           setAvatarUrl(profile.avatar_url);
           setBirthDate(profile.date_of_birth || '');
           setPhoneNumber(profile.phone_number || '');
+          setDocumentNumber(profile.document_number || '');
         }
         setLoading(false);
       };
@@ -54,6 +62,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({ isOpen, onC
     }
   }, [isOpen, currentUser]);
 
+  // Função para salvar os dados pessoais
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!currentUser) return;
@@ -65,6 +74,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({ isOpen, onC
       full_name: fullName,
       date_of_birth: birthDate,
       phone_number: phoneNumber,
+      document_number: documentNumber,
     };
 
     const { error } = await supabase.from('profiles').update(profileData).eq('id', currentUser.id);
@@ -78,6 +88,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({ isOpen, onC
     setLoading(false);
   };
 
+  // Função para alterar a senha
   const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword.length < 8) {
@@ -102,6 +113,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({ isOpen, onC
     setLoading(false);
   };
   
+  // Função para fazer upload da foto de perfil
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0 || !currentUser) {
       return;
@@ -148,6 +160,7 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({ isOpen, onC
           {loading && <p className="loading-message">Carregando...</p>}
           {!loading && (
             <div className="settings-grid">
+              {/* Card de Dados Pessoais */}
               <div className="content-card">
                 <h3>Dados Pessoais</h3>
                 <form onSubmit={handleUpdateProfile} className="settings-form">
@@ -158,20 +171,42 @@ const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({ isOpen, onC
                       <input type="file" id="avatar-file" accept="image/*" onChange={handleAvatarUpload} style={{display: 'none'}} />
                     </div>
                   </div>
+                  
                   <label htmlFor="email">E-mail</label>
                   <input id="email" type="text" value={currentUser?.email || ''} disabled />
+                  
                   <label htmlFor="fullName">Nome Completo</label>
                   <input id="fullName" type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} />
                   
                   <label htmlFor="birthDate">Data de Nascimento</label>
                   <input id="birthDate" type="date" value={birthDate} onChange={(e) => setBirthDate(e.target.value)} />
+                  
                   <label htmlFor="phoneNumber">Celular para Contato</label>
-                  <input id="phoneNumber" type="tel" placeholder="(XX) XXXXX-XXXX" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
+                  <PhoneInput
+                    id="phoneNumber"
+                    international
+                    withCountryCallingCode
+                    placeholder="Número de celular"
+                    value={phoneNumber}
+                    onChange={setPhoneNumber}
+                    defaultCountry="BR"
+                    className="phone-input-container"
+                  />
+                  
+                  <label htmlFor="documentNumber">CPF</label>
+                  <input 
+                    id="documentNumber" 
+                    type="text" 
+                    placeholder="000.000.000-00" 
+                    value={documentNumber} 
+                    onChange={(e) => setDocumentNumber(e.target.value)} 
+                  />
                   
                   <button type="submit" className="cta-button" disabled={loading}>Salvar Alterações</button>
                 </form>
               </div>
 
+              {/* Card de Alterar Senha */}
               <div className="content-card">
                 <h3>Alterar Senha</h3>
                 <form onSubmit={handleUpdatePassword} className="settings-form">

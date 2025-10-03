@@ -1,5 +1,5 @@
 // src/pages/TransacoesPage.tsx
-// VERSÃO 100% COMPLETA com Status (Pago/Pendente/Vencido), Filtro e Ação Rápida
+// VERSÃO 100% COMPLETA com colunas de data separadas
 
 import { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
@@ -11,6 +11,7 @@ import './TransacoesPage.css';
 
 import AddTransactionModal from '../components/AddTransactionModal';
 import CategoriesModal from '../components/CategoriesModal';
+import RecurringTransactionsModal from '../components/RecurringTransactionsModal';
 
 registerLocale('pt-BR', ptBR);
 
@@ -27,10 +28,10 @@ type Transaction = {
   transaction_date: string;
 };
 
-type Category = { 
-  id: string; 
-  name: string; 
-  color: string; 
+type Category = {
+  id: string;
+  name: string;
+  color: string;
 };
 
 const ITEMS_PER_PAGE = 10;
@@ -49,10 +50,11 @@ const TransacoesPage = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  
+
   const [isTransactionModalOpen, setTransactionModalOpen] = useState(false);
   const [isCategoriesModalOpen, setCategoriesModalOpen] = useState(false);
-  
+  const [isRecurringModalOpen, setRecurringModalOpen] = useState(false);
+
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [selectedTransactions, setSelectedTransactions] = useState<number[]>([]);
 
@@ -61,27 +63,23 @@ const TransacoesPage = () => {
   const [filterType, setFilterType] = useState('all');
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [dateFilter, setDateFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('thisMonth');
   const [customMonth, setCustomMonth] = useState<Date | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
   const fetchData = async () => {
     if (!loading) setLoading(true);
     setError('');
-
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Sessão não encontrada.');
       const token = session.access_token;
-      
       const [transRes, catRes] = await Promise.all([
         axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/transactions`, { headers: { 'Authorization': `Bearer ${token}` } }),
         axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/categories`, { headers: { 'Authorization': `Bearer ${token}` } })
       ]);
-
       setTransactions(transRes.data || []);
       setCategories(catRes.data || []);
-
     } catch (err) {
       setError('Não foi possível carregar os dados.');
     } finally {
@@ -150,25 +148,22 @@ const TransacoesPage = () => {
       alert('Ocorreu um erro ao tentar apagar os lançamentos.');
     }
   };
-  
+
   const handleMarkAsPaid = async (transaction: Transaction) => {
     try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) throw new Error("Usuário não autenticado.");
-        const token = session.access_token;
-
-        const transactionData = {
-            ...transaction, // Envia todos os dados para não perder nada
-            status: 'pago',
-            transaction_date: new Date().toISOString().split('T')[0]
-        };
-
-        const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/transactions/${transaction.id}`;
-        await axios.put(apiUrl, transactionData, { headers: { 'Authorization': `Bearer ${token}` } });
-
-        fetchData();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Usuário não autenticado.");
+      const token = session.access_token;
+      const transactionData = {
+        ...transaction,
+        status: 'pago',
+        transaction_date: new Date().toISOString().split('T')[0]
+      };
+      const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/transactions/${transaction.id}`;
+      await axios.put(apiUrl, transactionData, { headers: { 'Authorization': `Bearer ${token}` } });
+      fetchData();
     } catch (err) {
-        alert('Não foi possível atualizar o lançamento.');
+      alert('Não foi possível atualizar o lançamento.');
     }
   };
 
@@ -182,42 +177,42 @@ const TransacoesPage = () => {
     setTransactionModalOpen(true);
   };
 
-  const filteredTransactions = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  const pageTitle = useMemo(() => {
+    const now = new Date();
+    const formatOptions: Intl.DateTimeFormatOptions = { month: 'long', year: 'numeric', timeZone: 'UTC' };
+    switch (dateFilter) {
+      case 'all': return 'Todos os Lançamentos';
+      case 'today': return 'Lançamentos de Hoje';
+      case 'yesterday': return 'Lançamentos de Ontem';
+      case 'last7days': return 'Lançamentos dos Últimos 7 Dias';
+      case 'thisMonth': return `Lançamentos de ${now.toLocaleDateString('pt-BR', formatOptions)}`;
+      case 'custom':
+        if (customMonth) { return `Lançamentos de ${customMonth.toLocaleDateString('pt-BR', formatOptions)}`; }
+        return 'Selecione um Mês';
+      default: return 'Lançamentos Financeiros';
+    }
+  }, [dateFilter, customMonth]);
 
+  const filteredTransactions = useMemo(() => {
+    const todayStr = new Date().toLocaleDateString('en-CA');
     return transactions.filter(t => {
       if (searchTerm) {
         const lowerCaseSearchTerm = searchTerm.toLowerCase();
-        const descriptionMatch = t.description.toLowerCase().includes(lowerCaseSearchTerm);
-        const idMatch = formatTransactionId(t.id).includes(lowerCaseSearchTerm);
-        if (!descriptionMatch && !idMatch) return false;
+        if (!t.description.toLowerCase().includes(lowerCaseSearchTerm) && !formatTransactionId(t.id).includes(lowerCaseSearchTerm)) return false;
       }
-
       if (filterType !== 'all' && t.type !== filterType) return false;
       if (filterCategory !== 'all' && t.category_id !== filterCategory) return false;
-      
       if (filterStatus !== 'all') {
-        if (filterStatus === 'vencido') {
-          const dueDate = t.due_date ? new Date(t.due_date) : null;
-          if (t.status !== 'pendente' || !dueDate || new Date(dueDate) >= today) {
-            return false;
-          }
-        } else if (filterStatus === 'pendente') {
-            const dueDate = t.due_date ? new Date(t.due_date) : null;
-            if (t.status !== 'pendente' || (dueDate && new Date(dueDate) < today)) {
-                return false;
-            }
-        } else {
-          if (t.status !== filterStatus) return false;
-        }
+        if (filterStatus === 'vencido') { if (t.status !== 'pendente' || !t.due_date || t.due_date >= todayStr) return false; }
+        else if (filterStatus === 'pendente') { if (t.status !== 'pendente' || (t.due_date && t.due_date < todayStr)) return false; }
+        else { if (t.status !== filterStatus) return false; }
       }
-
-      const transactionDate = new Date(t.transaction_date);
+      const transactionDate = new Date(t.transaction_date || t.created_at);
+      const today = new Date(); today.setHours(0, 0, 0, 0);
       switch (dateFilter) {
         case 'today': return transactionDate.toDateString() === today.toDateString();
         case 'yesterday': { const yesterday = new Date(); yesterday.setDate(today.getDate() - 1); return transactionDate.toDateString() === yesterday.toDateString(); }
-        case 'last7days': { const sevenDaysAgo = new Date(); sevenDaysAgo.setDate(today.getDate() - 6); sevenDaysAgo.setHours(0,0,0,0); return transactionDate >= sevenDaysAgo; }
+        case 'last7days': { const sevenDaysAgo = new Date(); sevenDaysAgo.setDate(today.getDate() - 6); sevenDaysAgo.setHours(0, 0, 0, 0); return transactionDate >= sevenDaysAgo; }
         case 'thisMonth': return transactionDate.getMonth() === today.getMonth() && transactionDate.getFullYear() === today.getFullYear();
         case 'custom': { if (!customMonth) return true; return transactionDate.getFullYear() === customMonth.getFullYear() && transactionDate.getMonth() === customMonth.getMonth(); }
         default: return true;
@@ -225,16 +220,24 @@ const TransacoesPage = () => {
     });
   }, [transactions, searchTerm, filterType, filterCategory, dateFilter, customMonth, filterStatus]);
 
+  const totalReceitas = useMemo(() =>
+    filteredTransactions.filter(t => t.type === 'receita').reduce((acc, t) => acc + t.amount, 0),
+    [filteredTransactions]
+  );
+
+  const totalDespesas = useMemo(() =>
+    filteredTransactions.filter(t => t.type === 'despesa').reduce((acc, t) => acc + t.amount, 0),
+    [filteredTransactions]
+  );
+
+  const saldoAtual = totalReceitas - totalDespesas;
+
   const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE);
 
   const paginatedTransactions = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredTransactions.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [filteredTransactions, currentPage]);
-
-  const totalReceitas = useMemo(() => transactions.filter(t => t.type === 'receita').reduce((acc, t) => acc + t.amount, 0), [transactions]);
-  const totalDespesas = useMemo(() => transactions.filter(t => t.type === 'despesa').reduce((acc, t) => acc + t.amount, 0), [transactions]);
-  const saldoAtual = totalReceitas - totalDespesas;
 
   useEffect(() => {
     setCurrentPage(1);
@@ -254,18 +257,14 @@ const TransacoesPage = () => {
       setSelectedTransactions(prev => [...new Set([...prev, ...currentPageIds])]);
     }
   };
-  
-  const renderStatusTag = (transaction: Transaction) => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
 
+  const renderStatusTag = (transaction: Transaction) => {
+    const todayStr = new Date().toLocaleDateString('en-CA');
     if (transaction.status === 'pago') {
       return <span className="status-tag pago">Pago</span>;
     }
-
     if (transaction.status === 'pendente') {
-      const dueDate = transaction.due_date ? new Date(transaction.due_date) : null;
-      if (dueDate && dueDate < today) {
+      if (transaction.due_date && transaction.due_date < todayStr) {
         return <span className="status-tag vencido">Vencido</span>;
       }
       return <span className="status-tag pendente">Pendente</span>;
@@ -277,8 +276,9 @@ const TransacoesPage = () => {
     <>
       <div className="transacoes-container">
         <header className="page-header">
-          <h1>Lançamentos Financeiros</h1>
+          <h1>{pageTitle}</h1>
           <div className="header-actions">
+            <button className="button-secondary" onClick={() => setRecurringModalOpen(true)}>Recorrências</button>
             <button className="button-secondary" onClick={() => setCategoriesModalOpen(true)}>Gerenciar Categorias</button>
             <button className="button-secondary" onClick={handleExport}>Exportar</button>
             <button className="cta-button" onClick={handleOpenCreateModal}>+ Adicionar Lançamento</button>
@@ -297,7 +297,7 @@ const TransacoesPage = () => {
           <div className="custom-select-wrapper"><select className="filter-select" value={filterCategory} onChange={e => setFilterCategory(e.target.value)}><option value="all">Todas as categorias</option>{categories.map(cat => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}</select></div>
           <div className="custom-select-wrapper"><select className="filter-select" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}><option value="all">Todos os status</option><option value="pago">Pago</option><option value="pendente">Pendente</option><option value="vencido">Vencido</option></select></div>
           <div className="custom-select-wrapper"><select className="filter-select" value={dateFilter} onChange={e => setDateFilter(e.target.value)}><option value="all">Todo o período</option><option value="today">Hoje</option><option value="yesterday">Ontem</option><option value="last7days">Últimos 7 dias</option><option value="thisMonth">Este Mês</option><option value="custom">Escolher mês...</option></select></div>
-          {dateFilter === 'custom' && (<DatePicker selected={customMonth} onChange={(date: Date | null) => setCustomMonth(date)} dateFormat="'MMMM de 'yyyy" showMonthYearPicker locale="pt-BR" className="month-input" placeholderText="Selecione o mês" />)}
+          {dateFilter === 'custom' && (<DatePicker selected={customMonth} onChange={(date: Date | null) => setCustomMonth(date)} dateFormat="MMMM 'de' yyyy" showMonthYearPicker locale="pt-BR" className="month-input" placeholderText="Selecione o mês" />)}
           {selectedTransactions.length > 0 && (<button className="button-danger" onClick={handleBulkDelete}>Excluir Selecionados ({selectedTransactions.length})</button>)}
         </div>
         
@@ -314,7 +314,8 @@ const TransacoesPage = () => {
                     <th>Valor</th>
                     <th>Categoria</th>
                     <th>Tipo</th>
-                    <th>Data</th>
+                    <th>Data Efetiva</th>
+                    <th>Data de Cadastro</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
@@ -332,6 +333,7 @@ const TransacoesPage = () => {
                           <td>{category ? <span className="category-tag" style={{ backgroundColor: category.color }}>{category.name}</span> : <span className="no-category-tag">N/A</span>}</td>
                           <td><span className={`tag ${t.type}`}>{t.type}</span></td>
                           <td>{new Date(t.transaction_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
+                          <td className="creation-date">{new Date(t.created_at).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
                           <td>
                             <div className="action-icons">
                               {t.status === 'pendente' && ( <span onClick={() => handleMarkAsPaid(t)} title="Marcar como pago">✅</span> )}
@@ -343,7 +345,7 @@ const TransacoesPage = () => {
                       );
                     })
                   ) : (
-                    <tr><td colSpan={9}>Nenhum lançamento encontrado para os filtros selecionados.</td></tr>
+                    <tr><td colSpan={10}>Nenhum lançamento encontrado para os filtros selecionados.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -373,6 +375,12 @@ const TransacoesPage = () => {
         isOpen={isCategoriesModalOpen}
         onClose={() => setCategoriesModalOpen(false)}
         onCategoriesChange={fetchData}
+      />
+      <RecurringTransactionsModal
+        isOpen={isRecurringModalOpen}
+        onClose={() => setRecurringModalOpen(false)}
+        onRecurrenceChange={fetchData}
+        categories={categories}
       />
     </>
   );

@@ -1,74 +1,94 @@
 /* src/layouts/DashboardLayout.css */
-/* Versão atualizada em: 26 de Setembro de 2025 */
-
-:root {
-  --sidebar-bg: #1e293b;
-  --sidebar-text: #cbd5e1; /* Um cinza mais claro para melhor contraste */
-  --sidebar-text-hover: #ffffff;
-  --sidebar-link-active-bg: var(--verde-principal);
-  --main-bg: #f8fafc;
-}
+/* VERSÃO COMPLETA E REFINADA */
 
 .dashboard-layout {
   display: flex;
   min-height: 100vh;
+  background-color: #f8fafc; /* Cor de fundo do conteúdo principal */
 }
 
+/* --- BARRA LATERAL (SIDEBAR) --- */
 .sidebar {
-  width: 260px; /* Um pouco mais largo */
-  background-color: var(--sidebar-bg);
-  color: var(--sidebar-text);
-  display: flex; /* ESSENCIAL para o layout */
-  flex-direction: column; /* Organiza os itens em uma coluna */
-  padding: 1rem;
-  box-sizing: border-box;
+  width: 280px; /* Um pouco mais larga para mais espaço */
+  background-color: #1e293b; /* Um azul-marinho/chumbo escuro */
+  color: #e2e8f0; /* Cor de texto clara para contraste */
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-right: 1px solid #334155;
 }
 
-.sidebar .logo {
-    display: flex;
-    align-items: center;
-    justify-content: center; /* Centraliza a logo se não houver texto */
-    padding: 1rem;
-    margin-bottom: 1.5rem;
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* <-- MUDANÇA 1: Centraliza o conteúdo horizontalmente */
+  gap: 0.75rem;
+  padding-bottom: 2rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #334155;
 }
 
-.sidebar .logo .logo-icon {
-    width: 200px;
-    height: auto;
+.logo img {
+  height: 200px; /* <-- MUDANÇA 2: Aumenta a altura (ajuste o valor se precisar) */
+  width: auto;
 }
 
+/* --- NAVEGAÇÃO PRINCIPAL --- */
 .main-nav {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  flex-grow: 1; /* <-- ESTA É A LINHA MÁGICA que empurra o perfil para baixo */
+  gap: 0.5rem; /* Espaço entre os itens do menu */
 }
 
+/* Estilo base para CADA item do menu (NavLink) */
 .nav-item {
-  color: var(--sidebar-text);
-  text-decoration: none;
-  padding: 0.85rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem; /* Espaço entre o ícone e o texto */
+  padding: 0.8rem 1rem;
   border-radius: 8px;
+  color: #94a3b8; /* Cor padrão para links inativos */
+  text-decoration: none;
   font-weight: 500;
-  display: block; /* Garante que o link ocupe toda a largura */
   transition: background-color 0.2s, color 0.2s;
 }
 
+/* Efeito ao passar o mouse em um item INATIVO */
 .nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.05);
-  color: var(--sidebar-text-hover);
+  background-color: #334155; /* Fundo sutil no hover */
+  color: #f1f5f9; /* Texto fica mais claro no hover */
 }
 
-/* Estilo para quando o link está ativo */
+/* Estilo para o item ATIVO */
 .nav-item.active {
-  background-color: var(--sidebar-link-active-bg);
-  color: #ffffff;
+  background-color: var(--verde-principal); /* Sua cor verde principal */
+  color: white;
   font-weight: 600;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
+/* --- ÍCONES DENTRO DOS LINKS DE NAVEGAÇÃO --- */
+.nav-item svg {
+  width: 22px;
+  height: 22px;
+  stroke-width: 1.5;
+  flex-shrink: 0; /* Impede que o ícone seja espremido */
+}
+
+/* Opcional: Garante que a cor do ícone também mude no hover */
+.nav-item:hover svg {
+  color: #f1f5f9;
+}
+/* Garante que a cor do ícone fique branca no link ativo */
+.nav-item.active svg {
+  color: white;
+}
+
+
+/* --- CONTEÚDO PRINCIPAL --- */
 .main-content {
-  flex: 1;
-  background-color: var(--main-bg);
-  padding: 2.5rem;
+  flex-grow: 1;
+  padding: 2rem 3rem;
   overflow-y: auto;
 }

@@ -1,0 +1,291 @@
+/* src/components/RecurringTransactionsModal.css */
+/* VERSÃO COMPLETA com estilos para o DatePicker */
+
+/* Reutiliza estilos base para consistência */
+@import './AddTransactionModal.css'; 
+
+/* --- ESTILOS GERAIS DO MODAL --- */
+.recurring-modal {
+    max-width: 600px;
+}
+
+.recurring-modal h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--texto-escuro);
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+/* --- ESTILOS DO FORMULÁRIO --- */
+.category-form-stacked {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.recurring-modal .form-group {
+    margin-bottom: 0;
+}
+
+.recurring-modal .form-group label {
+    display: block; font-weight: 500; color: #334155;
+    margin-bottom: 0.5rem; font-size: 0.9rem;
+}
+
+.recurring-modal .form-group-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.recurring-modal input[type="text"],
+.recurring-modal input[type="number"],
+.recurring-modal input[type="date"],
+.recurring-modal select {
+  width: 100%; padding: 0.8rem 1rem; border: 1px solid #cbd5e1;
+  border-radius: 8px; font-size: 1rem; font-family: 'Inter', sans-serif;
+  box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.recurring-modal input:focus,
+.recurring-modal select:focus {
+  outline: none; border-color: var(--verde-principal);
+  box-shadow: 0 0 0 3px rgba(0, 128, 96, 0.1);
+}
+
+.recurring-modal .type-selector { display: flex; gap: 0.5rem; height: 100%; }
+.recurring-modal .type-selector label { flex: 1; display: flex; align-items: center; justify-content: center; font-weight: 500; font-size: 1rem; color: #334155; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: border-color 0.2s, background-color 0.2s; text-align: center; margin-bottom: 0; }
+.recurring-modal .type-selector input[type="radio"] { display: none; }
+.recurring-modal .type-selector label.selected { border-color: var(--verde-principal); background-color: #f0fdf4; color: var(--verde-principal); font-weight: 600; }
+.recurring-modal .custom-select-wrapper { position: relative; height: 100%; }
+.recurring-modal .custom-select-wrapper .filter-select { -webkit-appearance: none; -moz-appearance: none; appearance: none; padding-right: 2.5rem; height: 100%; }
+.recurring-modal .custom-select-wrapper::after { content: ''; position: absolute; top: 50%; right: 1rem; transform: translateY(-50%); width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 6px solid #64748b; pointer-events: none; }
+.cta-button.full-width { width: 100%; padding-top: 0.9rem; padding-bottom: 0.9rem; margin-top: 0.5rem; }
+.divider { border: none; border-top: 1px solid #e2e8f0; margin: 2rem 0; }
+.form-error-message { text-align: center; margin-top: 0; margin-bottom: 1rem; color: #dc2626; font-size: 0.9rem; }
+
+/* --- LISTA DE RECORRÊNCIAS --- */
+.categories-list { list-style: none; padding: 0; margin: 0; max-height: 250px; overflow-y: auto; padding-right: 8px; }
+.categories-list li { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-radius: 8px; background-color: #fff; border: 1px solid #f1f5f9; margin-bottom: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+.category-info { display: flex; align-items: center; gap: 1.5rem; }
+.info-item { display: flex; flex-direction: column; gap: 0.25rem; }
+.info-label { font-size: 0.7rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; }
+.delete-button { background: none; border: none; cursor: pointer; font-size: 1.2rem; opacity: 0.5; transition: opacity 0.2s; }
+.delete-button:hover { opacity: 1; }
+.empty-list-message { text-align: center; color: #64748b; padding: 2rem 0; }
+
+
+/* --- NOVOS ESTILOS PARA O DATEPICKER --- */
+
+.date-picker-input {
+    width: 100%;
+}
+
+.react-datepicker-popper {
+    z-index: 1001; /* Garante que o calendário apareça sobre o modal */
+}
+
+.react-datepicker {
+  font-family: 'Inter', sans-serif;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.react-datepicker__header {
+  background-color: var(--verde-principal);
+  border-bottom: none;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.react-datepicker__current-month,
+.react-datepicker__navigation,
+.react-datepicker__day-name {
+  color: white;
+  font-weight: 600;
+}
+
+.react-datepicker__navigation:hover {
+    background-color: rgba(255,255,255,0.1);
+}
+
+.react-datepicker__day-name {
+    opacity: 0.8;
+}
+
+.react-datepicker__day {
+    border-radius: 50%;
+    transition: background-color 0.2s;
+    line-height: 1.8rem;
+    width: 1.8rem;
+}
+.react-datepicker__day:hover {
+    background-color: #f1f5f9;
+}
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background-color: var(--azul-marinho);
+  color: white;
+  font-weight: bold;
+}
+.react-datepicker__day--today {
+    font-weight: bold;
+    color: var(--verde-principal);
+}
+.react-datepicker__day--outside-month {
+    opacity: 0.4;
+}
+
+.react-datepicker__triangle {
+    display: none;
+}
+
+/* src/components/RecurringTransactionsModal.css */
+/* VERSÃO FINAL com setas do calendário customizadas */
+
+/* Reutiliza estilos base para consistência */
+@import './AddTransactionModal.css'; 
+
+/* --- ESTILOS GERAIS DO MODAL (já existentes) --- */
+.recurring-modal { max-width: 600px; }
+.recurring-modal h4 { font-size: 1rem; font-weight: 600; color: var(--texto-escuro); margin-top: 0; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #f1f5f9; }
+.recurring-modal .form-group { margin-bottom: 0; }
+.recurring-modal .form-group label { display: block; font-weight: 500; color: #334155; margin-bottom: 0.5rem; font-size: 0.9rem; }
+.recurring-modal .form-group-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.recurring-modal .type-selector { height: 100%; }
+.recurring-modal .custom-select-wrapper,
+.recurring-modal .custom-select-wrapper .filter-select { height: 100%; }
+
+/* --- ESTILOS DO FORMULÁRIO (já existentes) --- */
+.category-form-stacked { display: flex; flex-direction: column; gap: 1.25rem; }
+.recurring-modal input[type="text"], .recurring-modal input[type="number"], .recurring-modal input[type="date"], .recurring-modal select { width: 100%; padding: 0.8rem 1rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1rem; font-family: 'Inter', sans-serif; box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s; }
+.recurring-modal input:focus, .recurring-modal select:focus { outline: none; border-color: var(--verde-principal); box-shadow: 0 0 0 3px rgba(0, 128, 96, 0.1); }
+.recurring-modal .type-selector { display: flex; gap: 0.5rem; }
+.recurring-modal .type-selector label { flex: 1; display: flex; align-items: center; justify-content: center; font-weight: 500; font-size: 1rem; color: #334155; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: border-color 0.2s, background-color 0.2s; text-align: center; margin-bottom: 0; }
+.recurring-modal .type-selector input[type="radio"] { display: none; }
+.recurring-modal .type-selector label.selected { border-color: var(--verde-principal); background-color: #f0fdf4; color: var(--verde-principal); font-weight: 600; }
+.recurring-modal .custom-select-wrapper { position: relative; }
+.recurring-modal .custom-select-wrapper .filter-select { -webkit-appearance: none; -moz-appearance: none; appearance: none; padding-right: 2.5rem; }
+.recurring-modal .custom-select-wrapper::after { content: ''; position: absolute; top: 50%; right: 1rem; transform: translateY(-50%); width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 6px solid #64748b; pointer-events: none; }
+.cta-button.full-width { width: 100%; padding-top: 0.9rem; padding-bottom: 0.9rem; margin-top: 0.5rem; }
+.divider { border: none; border-top: 1px solid #e2e8f0; margin: 2rem 0; }
+.form-error-message { text-align: center; margin-top: 0; margin-bottom: 1rem; color: #dc2626; font-size: 0.9rem; }
+
+/* --- LISTA DE RECORRÊNCIAS (já existentes) --- */
+.categories-list { list-style: none; padding: 0; margin: 0; max-height: 250px; overflow-y: auto; padding-right: 8px; }
+.categories-list li { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-radius: 8px; background-color: #fff; border: 1px solid #f1f5f9; margin-bottom: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+.category-info { display: flex; align-items: center; gap: 1.5rem; }
+.info-item { display: flex; flex-direction: column; gap: 0.25rem; }
+.info-label { font-size: 0.7rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; }
+.delete-button { background: none; border: none; cursor: pointer; font-size: 1.2rem; opacity: 0.5; transition: opacity 0.2s; }
+.delete-button:hover { opacity: 1; }
+.empty-list-message { text-align: center; color: #64748b; padding: 2rem 0; }
+
+/* --- ESTILOS PARA O DATEPICKER (ATUALIZADO) --- */
+.date-picker-input { width: 100%; }
+.react-datepicker-popper { z-index: 1001; }
+.react-datepicker { font-family: 'Inter', sans-serif; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); }
+.react-datepicker__header { background-color: var(--verde-principal); border-bottom: none; border-top-left-radius: 12px; border-top-right-radius: 12px; }
+.react-datepicker__current-month, .react-datepicker__day-name { color: white; font-weight: 600; }
+.react-datepicker__day-name { opacity: 0.8; }
+.react-datepicker__day { border-radius: 50%; transition: background-color 0.2s; line-height: 1.8rem; width: 1.8rem; }
+.react-datepicker__day:hover { background-color: #f1f5f9; }
+.react-datepicker__day--selected, .react-datepicker__day--keyboard-selected { background-color: var(--azul-marinho); color: white; font-weight: bold; }
+.react-datepicker__day--today { font-weight: bold; color: var(--verde-principal); }
+.react-datepicker__day--outside-month { opacity: 0.4; }
+.react-datepicker__triangle { display: none; }
+
+/* --- NOVOS ESTILOS PARA AS SETAS DO CALENDÁRIO --- */
+.react-datepicker__navigation {
+  top: 0rem;
+  width: 32px;
+  height: 32px;
+  /* Adiciona um ícone SVG de seta (chevron) como fundo */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='9 18 15 12 9 6'%3E%3C/polyline%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 50%;
+  border-radius: 50%;
+  transition: background-color 0.2s;
+}
+
+.react-datepicker__navigation:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Esconde a seta padrão (feita com bordas) */
+.react-datepicker__navigation-icon::before {
+    display: none;
+}
+
+/* Gira o ícone de seta para a esquerda */
+.react-datepicker__navigation--previous {
+    transform: rotate(180deg);
+}
+
+.category-actions { display: flex; align-items: center; gap: 0.5rem; }
+.icon-button { background: none; border: none; cursor: pointer; font-size: 1.2rem; opacity: 0.5; transition: opacity 0.2s; padding: 0.5rem; border-radius: 50%; }
+.icon-button:hover { opacity: 1; background-color: #f1f5f9; }
+.icon-button.delete-button:hover { color: #b91c1c; background-color: #fee2e2; }
+.form-actions { display: flex; gap: 0.75rem; }
+.form-actions .cta-button.full-width { flex-grow: 1; }
+.cancel-edit-button { padding: 0.8rem 1.5rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; background-color: #f1f5f9; color: #475569; border: none; cursor: pointer; transition: background-color 0.2s ease; }
+.cancel-edit-button:hover { background-color: #e2e8f0; }
+
+/* Adicione ao final de /src/components/RecurringTransactionsModal.css */
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.form-actions .cta-button.full-width {
+  flex-grow: 1;
+}
+
+.cancel-edit-button {
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  background-color: #f1f5f9;
+  color: #475569;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.cancel-edit-button:hover {
+  background-color: #e2e8f0;
+}
+
+.category-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  opacity: 0.5;
+  transition: opacity 0.2s, background-color 0.2s;
+  padding: 0.5rem;
+  border-radius: 50%;
+}
+
+.icon-button:hover {
+  opacity: 1;
+  background-color: #f1f5f9;
+}
+
+.icon-button.delete-button:hover {
+  color: #b91c1c;
+  background-color: #fee2e2;
+}

@@ -16,10 +16,12 @@ import EmailConfirmationPage from './pages/EmailConfirmationPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import DashboardPage from './pages/DashboardPage';
 import TransacoesPage from './pages/TransacoesPage';
+import CreditCardsPage from './pages/CreditCardsPage'; // A nova página
 
 
 // Importação do CSS global
 import './App.css'; 
+import CardDetailsPage from './pages/CardDetailsPage';
 
 function App() {
   return (
@@ -43,7 +45,9 @@ function App() {
           }
         >
           <Route index element={<DashboardPage />} /> 
-          <Route path="transacoes" element={<TransacoesPage />} />          
+          <Route path="transacoes" element={<TransacoesPage />} />      
+          <Route path="credit-cards" element={<CreditCardsPage />}/>
+          <Route path="credit-cards/:cardId" element={<CardDetailsPage />} /> {/* <-- ADICIONE ESTA LINHA */}    
         </Route>
       </Routes>
     </BrowserRouter>

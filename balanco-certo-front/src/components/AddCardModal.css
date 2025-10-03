@@ -1,0 +1,3 @@
+/* src/components/AddCardModal.css */
+@import './AddTransactionModal.css'; /* Reutiliza a maioria dos estilos */
+@import './CategoriesModal.css';   /* Reutiliza o estilo do color picker */

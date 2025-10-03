@@ -1,0 +1,173 @@
+/* src/pages/CardDetailsPage.css */
+/* VERSÃO ATUALIZADA com estilos para o botão de Voltar */
+
+@import './TransacoesPage.css';
+
+.card-details-container .page-header {
+    flex-wrap: wrap;
+    justify-content: space-between; /* Garante que os lados fiquem afastados */
+}
+
+/* --- NOVO WRAPPER PARA O TÍTULO E BOTÃO VOLTAR --- */
+.header-title-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+/* --- NOVO ESTILO PARA O BOTÃO VOLTAR --- */
+.back-button {
+    background-color: #f1f5f9;
+    color: #475569;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.back-button:hover {
+    background-color: #e2e8f0;
+}
+
+.card-icon-large {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+.card-icon-large svg {
+    width: 24px;
+    height: 24px;
+}
+
+.card-details-container .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.month-input {
+  padding: 0.75rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background-color: #fff;
+  font-size: 1rem;
+  color: #334155;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+}
+
+.card-title-header {
+  display: flex;
+  align-items: center; /* Alinha verticalmente os itens no centro */
+  gap: 1rem;
+}
+
+
+.card-title-header h1 {
+  margin: 0; 
+}
+
+
+/* Os estilos do botão e do ícone permanecem os mesmos da última vez */
+
+.back-button-details {
+  background-color: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color 0.2s, box-shadow 0.2s;
+  position: relative; 
+  flex-shrink: 0; /* Impede que o botão seja espremido */
+}
+
+.back-button-details:hover {
+  background-color: #e2e8f0;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.back-button-details svg {
+  width: auto;
+  height: auto;
+  color: #475569;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Adicione ao final de CardDetailsPage.css */
+.installment-tag {
+    background-color: #f1f5f9;
+    color: #475569;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.custom-datepicker-header {
+  background-color: var(--verde-principal);
+  color: #fff;
+  padding: 10px 12px;
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+
+.month-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.month-year {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.nav-button {
+  background: transparent;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+.nav-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+.nav-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.week-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  color: #fff;
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.week-day {
+  text-align: center;
+  padding: 4px 0;
+}
+
+

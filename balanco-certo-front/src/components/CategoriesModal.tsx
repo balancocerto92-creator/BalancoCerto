@@ -93,7 +93,26 @@ const CategoriesModal: React.FC<CategoriesModalProps> = ({ isOpen, onClose, onCa
     }
   };
 
-  const handleDeleteCategory = async (id: string) => { /* ... (código existente, sem alterações) ... */ };
+  const handleDeleteCategory = async (id: string) => {
+    if (!id) return;
+    setError('');
+    const confirmar = window.confirm('Tem certeza que deseja excluir esta categoria?');
+    if (!confirmar) return;
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Usuário não autenticado.');
+      const token = session.access_token;
+
+      const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/categories/${id}`;
+      await axios.delete(apiUrl, { headers: { Authorization: `Bearer ${token}` } });
+
+      onCategoriesChange();
+      fetchCategories();
+    } catch (err) {
+      setError('Ocorreu um erro ao excluir a categoria.');
+    }
+  };
 
   // NOVO: Função para iniciar a edição
   const handleStartEdit = (category: Category) => {

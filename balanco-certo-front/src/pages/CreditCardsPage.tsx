@@ -7,7 +7,7 @@ import axios from 'axios';
 import { supabase } from '../supabaseClient';
 import './CreditCardsPage.css';
 import AddCardModal from '../components/AddCardModal';
-import { CreditCardIcon } from '../components/Icons/Index';
+import { CreditCardIcon } from '../components/Icons/index';
 
 type Card = {
   id: string;

@@ -4,7 +4,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import ptBR from 'date-fns/locale/pt-BR';
+import { ptBR } from 'date-fns/locale/pt-BR';
 import axios from 'axios';
 import { supabase } from '../supabaseClient';
 import './ReportsPage.css';
@@ -112,15 +112,7 @@ const CategoryMultiSelect: React.FC<{
 
 type Basis = 'caixa' | 'competencia';
 
-function formatDateForInput(date: Date | string | null): string {
-  if (!date) return '';
-  const d = typeof date === 'string' ? new Date(date) : date;
-  if (Number.isNaN(d.getTime())) return '';
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
+
 
 const ReportsPage: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);

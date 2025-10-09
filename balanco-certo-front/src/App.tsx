@@ -2,6 +2,7 @@
 // Versão com os caminhos de importação corrigidos
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { ToastProvider } from './contexts/ToastContext';
 
 // Importação de Componentes e Layouts
 import ProtectedRoute from './components/ProtectedRoute';
@@ -17,6 +18,8 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import DashboardPage from './pages/DashboardPage';
 import TransacoesPage from './pages/TransacoesPage';
 import CreditCardsPage from './pages/CreditCardsPage'; // A nova página
+import ReportsPage from './pages/ReportsPage';
+import FinanceSettingsPage from './pages/FinanceSettingsPage';
 
 
 // Importação do CSS global
@@ -26,6 +29,7 @@ import CardDetailsPage from './pages/CardDetailsPage';
 function App() {
   return (
     <BrowserRouter>
+      <ToastProvider>
       <Routes>
         {/* --- Rotas Públicas --- */}
         <Route path="/" element={<LandingPage />} />
@@ -46,10 +50,13 @@ function App() {
         >
           <Route index element={<DashboardPage />} /> 
           <Route path="transacoes" element={<TransacoesPage />} />      
+          <Route path="relatorios" element={<ReportsPage />} />
+          <Route path="finance" element={<FinanceSettingsPage />} />
           <Route path="credit-cards" element={<CreditCardsPage />}/>
           <Route path="credit-cards/:cardId" element={<CardDetailsPage />} /> {/* <-- ADICIONE ESTA LINHA */}    
         </Route>
       </Routes>
+      </ToastProvider>
     </BrowserRouter>
   );
 }

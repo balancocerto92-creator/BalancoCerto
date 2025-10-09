@@ -1,6 +1,6 @@
 // src/components/AddCardModal.tsx
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { supabase } from '../supabaseClient';
 import './AddCardModal.css';
@@ -9,9 +9,17 @@ interface AddCardModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCardAdded: () => void;
+  cardToEdit?: {
+    id: string;
+    name: string;
+    card_brand?: string;
+    card_color: string;
+    closing_day: number;
+    due_day: number;
+  } | null;
 }
 
-const AddCardModal: React.FC<AddCardModalProps> = ({ isOpen, onClose, onCardAdded }) => {
+const AddCardModal: React.FC<AddCardModalProps> = ({ isOpen, onClose, onCardAdded, cardToEdit = null }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -26,6 +34,20 @@ const AddCardModal: React.FC<AddCardModalProps> = ({ isOpen, onClose, onCardAdde
     setName(''); setCardBrand(''); setCardColor('#4B5563');
     setClosingDay(''); setDueDay(''); setError('');
   };
+
+  // Preenche o formulário quando estiver em modo edição
+  useEffect(() => {
+    if (isOpen && cardToEdit) {
+      setName(cardToEdit.name || '');
+      setCardBrand(cardToEdit.card_brand || '');
+      setCardColor(cardToEdit.card_color || '#4B5563');
+      setClosingDay(String(cardToEdit.closing_day ?? ''));
+      setDueDay(String(cardToEdit.due_day ?? ''));
+    } else if (isOpen && !cardToEdit) {
+      clearForm();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, cardToEdit?.id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,9 +67,15 @@ const AddCardModal: React.FC<AddCardModalProps> = ({ isOpen, onClose, onCardAdde
         due_day: parseInt(dueDay)
       };
 
-      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/credit-cards`, cardData, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      if (cardToEdit) {
+        await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/credit-cards/${cardToEdit.id}`, cardData, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } else {
+        await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/credit-cards`, cardData, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      }
 
       clearForm();
       onCardAdded(); // Avisa o componente pai para recarregar a lista
@@ -65,7 +93,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({ isOpen, onClose, onCardAdde
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <div className="modal-header-custom">
-          <h3>Adicionar Novo Cartão</h3>
+          <h3>{cardToEdit ? 'Editar Cartão' : 'Adicionar Novo Cartão'}</h3>
           <button className="close-button" onClick={onClose}>×</button>
         </div>
         <form onSubmit={handleSubmit} className="transaction-form">
@@ -104,7 +132,7 @@ const AddCardModal: React.FC<AddCardModalProps> = ({ isOpen, onClose, onCardAdde
           <div className="modal-actions">
             <button type="button" className="cancel-button" onClick={onClose}>Cancelar</button>
             <button type="submit" className="cta-button" disabled={loading}>
-              {loading ? 'Salvando...' : 'Salvar Cartão'}
+              {loading ? 'Salvando...' : (cardToEdit ? 'Salvar Alterações' : 'Salvar Cartão')}
             </button>
           </div>
         </form>

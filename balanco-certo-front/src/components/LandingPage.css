@@ -144,6 +144,8 @@
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.3s ease;
   box-shadow: 0 4px 15px rgba(0, 128, 96, 0.2);
+  display: inline-block;
+  text-decoration: none;
 }
 
 .cta-button:hover {
@@ -285,16 +287,22 @@
   margin: 4rem auto 0 auto;
 }
 
+/* Ajuste para layout com um único plano */
+.pricing-container.single {
+  max-width: 680px;
+}
+
 .pricing-card {
   flex: 1;
-  background-color: #fff;
+  background: #fff;
   border: 1px solid #e2e8f0;
-  border-radius: 16px;
-  padding: 2.5rem;
+  border-radius: 20px;
+  padding: 3rem;
   text-align: left;
   position: relative;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  max-width: 360px;
+  max-width: 420px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
 }
 
 .pricing-card:hover {
@@ -329,23 +337,40 @@
   border-bottom: 1px solid #e2e8f0;
   padding-bottom: 1.5rem;
   margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .card-header h3 {
-  font-size: 1.5rem;
-  font-weight: 700;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
   color: var(--texto-escuro);
 }
 
 .price {
-  font-size: 3rem;
-  font-weight: 800;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 0.75rem;
+}
+
+.currency {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.amount {
+  font-size: 3.75rem;
+  font-weight: 900;
   color: var(--texto-escuro);
-  margin-top: 0.5rem;
+  line-height: 1;
 }
 
 .price-suffix {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 500;
   color: #64748b;
 }
@@ -381,11 +406,22 @@
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
+  display: block;
+  text-align: center;
+  text-decoration: none;
 }
 
 .cta-button-outline:hover {
   background-color: var(--verde-principal);
   color: #fff;
+}
+
+/* Descrição do plano mais legível */
+.plan-description {
+  font-size: 1rem;
+  color: #475569;
+  line-height: 1.7;
+  margin: 0 0 1.5rem 0;
 }
 
 .pricing-card.popular .cta-button {

@@ -112,7 +112,7 @@ const RegisterPage = () => {
           <img src={logoBalançoCerto} alt="Balanço Certo Logo" className="auth-logo" />
         </Link>
         <h2>Crie sua Conta</h2>
-        <p className="auth-subtitle">Comece a organizar suas finanças hoje mesmo.</p>
+        <p className="auth-subtitle">7 dias grátis para testar todas as funcionalidades.</p>
         <form onSubmit={handleRegister} className="auth-form">
           <input type="text" placeholder="Seu nome completo" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
           <input type="email" placeholder="Seu e-mail" value={email} onChange={(e) => setEmail(e.target.value)} required />

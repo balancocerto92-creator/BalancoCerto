@@ -4,7 +4,40 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { supabase } from '../supabaseClient';
+import { getTrialStatus } from '../utils/trial';
 import './AddTransactionModal.css';
+
+// Helper seguro para converter qualquer valor de data em formato de input (YYYY-MM-DD)
+const toInputDate = (raw?: string): string => {
+  if (!raw) return '';
+  const str = String(raw);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str; // já está no formato correto
+  let d = new Date(str);
+  if (isNaN(d.getTime())) {
+    // tenta tratar como data somente (YYYY-MM-DD) sem timezone
+    d = new Date(`${str.substring(0, 10)}T00:00:00Z`);
+  }
+  if (isNaN(d.getTime())) return '';
+  return d.toISOString().split('T')[0];
+};
+
+// Soma meses em uma data string (YYYY-MM-DD) com segurança em UTC
+const addMonthsToDateString = (dateStr: string, months: number): string => {
+  const [y, m, d] = (dateStr || '').split('-').map(Number);
+  if (!y || !m || !d) return dateStr;
+  const dt = new Date(Date.UTC(y, (m || 1) - 1, d || 1));
+  dt.setUTCMonth(dt.getUTCMonth() + months);
+  const yy = dt.getUTCFullYear();
+  const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(dt.getUTCDate()).padStart(2, '0');
+  return `${yy}-${mm}-${dd}`;
+};
+
+// Identifica faturas de cartão de crédito pelo padrão de descrição
+const isCreditCardInvoiceDescription = (description?: string): boolean => {
+  if (!description) return false;
+  return /^Fatura\s.+\s-\s.+$/.test(description.trim());
+};
 
 type Transaction = { 
   id: number; 
@@ -17,6 +50,8 @@ type Transaction = {
   status?: 'pago' | 'pendente';
   due_date?: string;
   transaction_date: string;
+  payment_date?: string;
+  entry_date?: string;
 };
 type Category = { id: string; name: string; };
 
@@ -39,6 +74,14 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
   const [status, setStatus] = useState<'pago' | 'pendente'>('pago');
   const [transactionDate, setTransactionDate] = useState(new Date().toISOString().split('T')[0]);
   const [dueDate, setDueDate] = useState('');
+  const [createdAt, setCreatedAt] = useState(new Date().toISOString().split('T')[0]);
+
+  // Parcelamento de boletos/lançamentos
+  const [isInstallment, setIsInstallment] = useState(false);
+  const [totalInstallments, setTotalInstallments] = useState('');
+
+  // Flag: é fatura de cartão?
+  const isInvoice = !!(transactionToEdit && isCreditCardInvoiceDescription(transactionToEdit.description));
 
   useEffect(() => {
     if (transactionToEdit && isOpen) {
@@ -47,8 +90,19 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
       setType(transactionToEdit.type);
       setCategoryId(transactionToEdit.category_id);
       setStatus(transactionToEdit.status || 'pago');
-      setTransactionDate(new Date(transactionToEdit.transaction_date || transactionToEdit.created_at).toISOString().split('T')[0]);
-      setDueDate(transactionToEdit.due_date ? new Date(transactionToEdit.due_date).toISOString().split('T')[0] : '');
+      setTransactionDate(
+        toInputDate(
+          (transactionToEdit as any).payment_date ||
+          transactionToEdit.transaction_date ||
+          (transactionToEdit as any).entry_date ||
+          transactionToEdit.created_at
+        ) || new Date().toISOString().split('T')[0]
+      );
+      setDueDate(toInputDate(transactionToEdit.due_date) || '');
+      setCreatedAt(
+        toInputDate((transactionToEdit as any).entry_date || transactionToEdit.created_at) ||
+        new Date().toISOString().split('T')[0]
+      );
     } else {
       clearForm();
     }
@@ -62,7 +116,10 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
     setStatus('pago');
     setTransactionDate(new Date().toISOString().split('T')[0]);
     setDueDate('');
+    setCreatedAt(new Date().toISOString().split('T')[0]);
     setError('');
+    setIsInstallment(false);
+    setTotalInstallments('');
   };
 
   const handleCloseModal = () => {
@@ -78,17 +135,28 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Usuário não autenticado.");
+      const createdAtStr = session.user?.created_at;
+      if (createdAtStr) {
+        const { expired } = getTrialStatus(createdAtStr);
+        if (expired && !transactionToEdit) {
+          setError('Seu teste gratuito de 7 dias terminou. Para continuar criando novos lançamentos, acesse Configurações Financeiras para regularizar seu plano.');
+          setLoading(false);
+          return;
+        }
+      }
       
       const token = session.access_token;
       
       const transactionData = { 
         description, 
-        amount: parseFloat(amount), 
+        amount: isInvoice && transactionToEdit ? transactionToEdit.amount : parseFloat(amount), 
         type,
         category_id: categoryId || null,
         status,
         transaction_date: status === 'pago' ? transactionDate : dueDate,
         due_date: status === 'pendente' ? dueDate : null,
+        created_at: createdAt,
+        entry_date: createdAt
       };
 
       if (!transactionData.transaction_date) {
@@ -102,7 +170,30 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
         await axios.put(apiUrl, transactionData, { headers: { 'Authorization': `Bearer ${token}` } });
       } else {
         const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/transactions`;
-        await axios.post(apiUrl, transactionData, { headers: { 'Authorization': `Bearer ${token}` } });
+        const total = isInstallment ? parseInt(totalInstallments || '0', 10) : 0;
+        if (isInstallment && total > 1) {
+          const baseDate = status === 'pendente' ? dueDate : transactionDate;
+          if (!baseDate) {
+            setError('Informe a data base (vencimento ou pagamento) para gerar as parcelas.');
+            setLoading(false);
+            return;
+          }
+          const requests = Array.from({ length: total }).map((_, idx) => {
+            const dt = addMonthsToDateString(baseDate, idx);
+            const body = {
+              ...transactionData,
+              description: `${description} - Parcela ${idx + 1}/${total}`,
+              transaction_date: dt,
+              due_date: status === 'pendente' ? dt : null,
+              created_at: dt,
+              entry_date: dt,
+            };
+            return axios.post(apiUrl, body, { headers: { 'Authorization': `Bearer ${token}` } });
+          });
+          await Promise.all(requests);
+        } else {
+          await axios.post(apiUrl, transactionData, { headers: { 'Authorization': `Bearer ${token}` } });
+        }
       }
 
       onTransactionAdded();
@@ -155,7 +246,7 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
             <div className="form-column">
               <div className="form-group">
                   <label htmlFor="amount">Valor (R$)</label>
-                  <input id="amount" type="number" step="0.01" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} required />
+                  <input id="amount" type="number" step="0.01" placeholder="0.00" value={amount} onChange={(e) => setAmount(e.target.value)} required disabled={isInvoice} title={isInvoice ? 'Valor bloqueado para faturas de cartão' : undefined} />
               </div>
               <div className="form-group">
                   <label>Tipo</label>
@@ -177,19 +268,61 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
                   </div>
               </div>
               <div className="form-group">
-                  {status === 'pago' ? (
-                      <>
-                          <label htmlFor="transactionDate">Data do Pagamento</label>
-                          <input id="transactionDate" type="date" value={transactionDate} onChange={e => setTransactionDate(e.target.value)} required />
-                      </>
-                  ) : (
-                      <>
-                          <label htmlFor="dueDate">Data de Vencimento</label>
-                          <input id="dueDate" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} required />
-                      </>
-                  )}
+                  <label htmlFor="createdAt">Data de Cadastro</label>
+                  <input id="createdAt" type="date" value={createdAt} onChange={e => setCreatedAt(e.target.value)} required />
               </div>
             </div>
+          </div>
+          
+          <div className="form-group-row">
+            <div className="form-column">
+              {status === 'pendente' && (
+                <div className="form-group">
+                    <label htmlFor="dueDate">Data de Vencimento</label>
+                    <input id="dueDate" type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} />
+                </div>
+              )}
+            </div>
+            <div className="form-column">
+              {status === 'pago' && (
+                <div className="form-group">
+                    <label htmlFor="transactionDate">Data de Pagamento</label>
+                    <input id="transactionDate" type="date" value={transactionDate} onChange={e => setTransactionDate(e.target.value)} />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Parcelamento de lançamentos (boletos) */}
+          <div className="form-divider"></div>
+          <div className="form-group-row">
+            <div className="form-column">
+              <div className="form-toggle">
+                <input
+                  type="checkbox"
+                  id="is-installment-tx"
+                  checked={isInstallment}
+                  onChange={e => setIsInstallment(e.target.checked)}
+                />
+                <label htmlFor="is-installment-tx">É um lançamento parcelado?</label>
+              </div>
+            </div>
+            {isInstallment && (
+              <div className="form-column">
+                <div className="form-group">
+                  <label htmlFor="total-installments-tx">Total de Parcelas</label>
+                  <input
+                    id="total-installments-tx"
+                    className="form-input"
+                    type="number"
+                    min="2"
+                    placeholder="Ex: 6"
+                    value={totalInstallments}
+                    onChange={e => setTotalInstallments(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
           </div>
           
           {error && <p className="form-error-message">{error}</p>}

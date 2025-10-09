@@ -1,0 +1,30 @@
+/* src/components/ConfirmModal.css */
+
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(15, 23, 42, 0.6);
+  display: flex; justify-content: center; align-items: center;
+  z-index: 1000; backdrop-filter: blur(4px);
+}
+
+.modal-content.confirm-modal {
+  background-color: #fff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  width: 100%; max-width: 460px; overflow: hidden;
+  animation: slideUp 0.25s ease-out;
+}
+
+@keyframes slideUp { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.confirm-header { background-color: var(--azul-marinho); color: #fff; padding: 1rem 1.25rem; display: flex; align-items: center; justify-content: space-between; }
+.confirm-header h3 { margin: 0; font-size: 1.1rem; }
+.confirm-body { padding: 1.25rem; color: #334155; }
+.confirm-actions { display: flex; justify-content: flex-end; gap: 0.75rem; padding: 0 1.25rem 1.25rem; }
+
+.cta-button { background-color: var(--verde-principal); color: #fff; border: none; padding: 0.7rem 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.cta-button.secondary { background-color: #f1f5f9; color: #334155; }
+.cta-button:disabled { opacity: 0.6; cursor: not-allowed; }
+.close-button { background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; opacity: 0.8; }
+.close-button:hover { opacity: 1; }

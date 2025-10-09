@@ -1,6 +1,7 @@
 // src/components/LandingPage.tsx
 // Versão atualizada em: 17 de Setembro de 2025
 import './LandingPage.css';
+import { Link } from 'react-router-dom';
 
 // IMPORTANTE: Confirme se o nome do arquivo do seu logo está correto
 import logoBalançoCerto from '../assets/balanco-Certo-logo.png';
@@ -35,7 +36,7 @@ const LandingPage = () => {
               Simplifique suas faturas, controle suas despesas e tenha clareza
               total do seu fluxo de caixa. Perfeito para autônomos e pequenas empresas.
             </p>
-            <button className="cta-button">Ver Demo</button>
+            <Link to="/login" className="cta-button">Ver Demo</Link>
           </div>
           <div className="hero-visual">
             <div className="visual-placeholder">
@@ -79,53 +80,41 @@ const LandingPage = () => {
 
         <section id="planos" className="content-section alternate-bg">
           <div className="section-intro">
-            <h2>Planos flexíveis para cada fase do seu negócio</h2>
-            <p>Comece de graça e cresça conosco. Todos os planos anuais garantem 2 meses de desconto.</p>
+            <h2>Plano único, simples e direto</h2>
+            <p>Assine por R$ 29,90/mês e tenha a gestão financeira que você precisa.</p>
           </div>
-          <div className="pricing-container">
+          <div className="pricing-container single">
             <div className="pricing-card">
               <div className="card-header">
-                <h3>Autônomo</h3>
-                <p className="price">R$ 29<span className="price-suffix">,90/mês</span></p>
+                <h3>Profissional</h3>
+                <p className="price">
+                  <span className="currency">R$</span>
+                  <span className="amount">29</span>
+                  <span className="price-suffix">,90/mês</span>
+                </p>
               </div>
-              <ul className="features-list">
-                <li><span className="check-icon">✔</span> 1 Usuário</li>
-                <li><span className="check-icon">✔</span> Até 30 lançamentos/mês</li>
-                <li><span className="check-icon">✔</span> Emissão de faturas e orçamentos</li>
-                <li><span className="check-icon">✔</span> Cadastro de clientes</li>
-                <li><span className="check-icon">✔</span> Relatórios simples</li>
-              </ul>
-              <button className="cta-button-outline">Escolher Plano</button>
-            </div>
-            <div className="pricing-card popular">
-              <div className="popular-badge">MAIS POPULAR</div>
-              <div className="card-header">
-                <h3>PME</h3>
-                <p className="price">R$ 79<span className="price-suffix">,90/mês</span></p>
+              <div className="plan-meta">
+                <div className="plan-badge">PLANO PROFISSIONAL</div>
+                <h4 className="pricing-title">Sem taxas ou custos extras</h4>
               </div>
-              <ul className="features-list">
-                <li><span className="check-icon">✔</span> <b>Tudo do plano Autônomo, mais:</b></li>
-                <li><span className="check-icon">✔</span> Até 5 Usuários</li>
-                <li><span className="check-icon">✔</span> Lançamentos ilimitados</li>
-                <li><span className="check-icon">✔</span> Conciliação bancária automática</li>
-                <li><span className="check-icon">✔</span> Relatórios completos (DRE, Fluxo de Caixa)</li>
-                <li><span className="check-icon">✔</span> Suporte via chat</li>
+              <p className="plan-description">
+                Inclui 1 usuário, lançamentos ilimitados, emissão de faturas e orçamentos, cadastro de clientes e relatórios simples. Ideal para quem quer organizar o fluxo de caixa sem complicação.
+              </p>
+              <ul className="features-list enhanced">
+                <li className="feature included"><span className="icon check">✔</span> Lançamentos ilimitados</li>
+                <li className="feature included"><span className="icon check">✔</span> Emissão de faturas e orçamentos</li>
+                <li className="feature included"><span className="icon check">✔</span> Cadastro de clientes</li>
+                <li className="feature included"><span className="icon check">✔</span> Cartões de crédito e parcelamentos</li>
+                <li className="feature included"><span className="icon check">✔</span> Recorrências e conciliação básica</li>
+                <li className="feature included"><span className="icon check">✔</span> Relatórios simples (Fluxo de Caixa)</li>
+                <li className="feature included"><span className="icon check">✔</span> Exportação para CSV</li>
+                <li className="feature included"><span className="icon check">✔</span> Suporte via chat</li>
+                <li className="feature excluded"><span className="icon cross">✖</span> <span className="text-strike">Relatórios avançados personalizados</span></li>
+                <li className="feature excluded"><span className="icon cross">✖</span> <span className="text-strike">Acesso via API para integrações</span></li>
+                <li className="feature excluded"><span className="icon cross">✖</span> <span className="text-strike">Usuários adicionais</span></li>
+                <li className="feature excluded"><span className="icon cross">✖</span> <span className="text-strike">Suporte prioritário</span></li>
               </ul>
-              <button className="cta-button">Iniciar Teste Grátis</button>
-            </div>
-            <div className="pricing-card">
-              <div className="card-header">
-                <h3>Crescimento</h3>
-                <p className="price">R$ 149<span className="price-suffix">,90/mês</span></p>
-              </div>
-              <ul className="features-list">
-                <li><span className="check-icon">✔</span> <b>Tudo do plano PME, mais:</b></li>
-                <li><span className="check-icon">✔</span> Usuários ilimitados</li>
-                <li><span className="check-icon">✔</span> Relatórios avançados e personalizados</li>
-                <li><span className="check-icon">✔</span> Acesso via API para integrações</li>
-                <li><span className="check-icon">✔</span> Suporte prioritário</li>
-              </ul>
-              <button className="cta-button-outline">Fale Conosco</button>
+              <Link to="/login" className="cta-button-outline">Assinar agora</Link>
             </div>
           </div>
           <div className="faq-section">

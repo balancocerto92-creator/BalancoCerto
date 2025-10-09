@@ -1,16 +1,18 @@
 /* src/components/RecurringTransactionsModal.css */
-/* VERSÃO COMPLETA com estilos para o DatePicker */
+/* VERSÃO MELHORADA com estilos modernos */
 
 /* Reutiliza estilos base para consistência */
 @import './AddTransactionModal.css'; 
 
 /* --- ESTILOS GERAIS DO MODAL --- */
 .recurring-modal {
-    max-width: 600px;
+    max-width: 650px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
 .recurring-modal h4 {
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 600;
     color: var(--texto-escuro);
     margin-top: 0;
@@ -23,7 +25,8 @@
 .category-form-stacked {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
 }
 
 .recurring-modal .form-group {
@@ -31,51 +34,251 @@
 }
 
 .recurring-modal .form-group label {
-    display: block; font-weight: 500; color: #334155;
-    margin-bottom: 0.5rem; font-size: 0.9rem;
+    display: block; 
+    font-weight: 500; 
+    color: #334155;
+    margin-bottom: 0.5rem; 
+    font-size: 0.95rem;
 }
 
 .recurring-modal .form-group-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 1rem;
+    gap: 1.25rem;
+    align-items: center;
+    height: 100%;
 }
 
 .recurring-modal input[type="text"],
 .recurring-modal input[type="number"],
 .recurring-modal input[type="date"],
 .recurring-modal select {
-  width: 100%; padding: 0.8rem 1rem; border: 1px solid #cbd5e1;
-  border-radius: 8px; font-size: 1rem; font-family: 'Inter', sans-serif;
-  box-sizing: border-box; transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%; 
+  padding: 0.9rem 1rem; 
+  border: 1px solid #cbd5e1;
+  border-radius: 10px; 
+  font-size: 1rem; 
+  font-family: 'Inter', sans-serif;
+  box-sizing: border-box; 
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background-color: #f8fafc;
 }
 
 .recurring-modal input:focus,
 .recurring-modal select:focus {
-  outline: none; border-color: var(--verde-principal);
-  box-shadow: 0 0 0 3px rgba(0, 128, 96, 0.1);
+  outline: none; 
+  border-color: var(--verde-principal);
+  box-shadow: 0 0 0 3px rgba(0, 128, 96, 0.15);
+  background-color: #fff;
 }
 
-.recurring-modal .type-selector { display: flex; gap: 0.5rem; height: 100%; }
-.recurring-modal .type-selector label { flex: 1; display: flex; align-items: center; justify-content: center; font-weight: 500; font-size: 1rem; color: #334155; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: border-color 0.2s, background-color 0.2s; text-align: center; margin-bottom: 0; }
-.recurring-modal .type-selector input[type="radio"] { display: none; }
-.recurring-modal .type-selector label.selected { border-color: var(--verde-principal); background-color: #f0fdf4; color: var(--verde-principal); font-weight: 600; }
-.recurring-modal .custom-select-wrapper { position: relative; height: 100%; }
-.recurring-modal .custom-select-wrapper .filter-select { -webkit-appearance: none; -moz-appearance: none; appearance: none; padding-right: 2.5rem; height: 100%; }
-.recurring-modal .custom-select-wrapper::after { content: ''; position: absolute; top: 50%; right: 1rem; transform: translateY(-50%); width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 6px solid #64748b; pointer-events: none; }
-.cta-button.full-width { width: 100%; padding-top: 0.9rem; padding-bottom: 0.9rem; margin-top: 0.5rem; }
-.divider { border: none; border-top: 1px solid #e2e8f0; margin: 2rem 0; }
-.form-error-message { text-align: center; margin-top: 0; margin-bottom: 1rem; color: #dc2626; font-size: 0.9rem; }
+.recurring-modal .type-selector { 
+  display: flex; 
+  gap: 0.75rem; 
+  height: 100%;
+  align-items: center;
+}
+
+.recurring-modal .type-selector label { 
+  flex: 1; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-weight: 500; 
+  font-size: 0.95rem; 
+  color: #334155; 
+  padding: 0.85rem 0.5rem; 
+  border: 1px solid #e2e8f0; 
+  border-radius: 10px; 
+  cursor: pointer; 
+  transition: all 0.2s ease; 
+  margin-bottom: 0;
+  text-align: center;
+}
+
+.recurring-modal .type-selector input[type="radio"] { 
+  display: none; 
+}
+
+.recurring-modal .type-selector label.selected { 
+  border-color: var(--verde-principal); 
+  background-color: #f0fdf4; 
+  color: var(--verde-principal); 
+  font-weight: 600; 
+  box-shadow: 0 2px 5px rgba(0, 128, 96, 0.1);
+}
+.recurring-modal .custom-select-wrapper { 
+  position: relative; 
+  height: 100%; 
+  display: flex;
+  align-items: center;
+}
+
+.recurring-modal .custom-select-wrapper .filter-select { 
+  -webkit-appearance: none; 
+  -moz-appearance: none; 
+  appearance: none; 
+  padding-right: 2.5rem; 
+  height: 100%;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.recurring-modal .custom-select-wrapper::after { 
+  content: ''; 
+  position: absolute; 
+  top: 50%; 
+  right: 1rem; 
+  transform: translateY(-50%); 
+  width: 0; 
+  height: 0; 
+  border-left: 6px solid transparent; 
+  border-right: 6px solid transparent; 
+  border-top: 6px solid #64748b; 
+  pointer-events: none; 
+}
+
+.cta-button.full-width { 
+  width: 100%; 
+  padding: 1rem; 
+  margin-top: 0.5rem; 
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.cta-button.full-width:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 128, 96, 0.15);
+}
+.divider { 
+  border: none; 
+  border-top: 1px solid #e2e8f0; 
+  margin: 2rem 0; 
+}
+
+.form-error-message { 
+  text-align: center; 
+  margin: 1rem 0; 
+  color: #dc2626; 
+  font-size: 0.95rem;
+  background-color: #fee2e2;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-weight: 500;
+}
 
 /* --- LISTA DE RECORRÊNCIAS --- */
-.categories-list { list-style: none; padding: 0; margin: 0; max-height: 250px; overflow-y: auto; padding-right: 8px; }
-.categories-list li { display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-radius: 8px; background-color: #fff; border: 1px solid #f1f5f9; margin-bottom: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
-.category-info { display: flex; align-items: center; gap: 1.5rem; }
-.info-item { display: flex; flex-direction: column; gap: 0.25rem; }
-.info-label { font-size: 0.7rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; }
-.delete-button { background: none; border: none; cursor: pointer; font-size: 1.2rem; opacity: 0.5; transition: opacity 0.2s; }
-.delete-button:hover { opacity: 1; }
-.empty-list-message { text-align: center; color: #64748b; padding: 2rem 0; }
+.categories-list { 
+  list-style: none; 
+  padding: 0; 
+  margin: 0; 
+  max-height: 300px; 
+  overflow-y: auto; 
+  padding-right: 8px; 
+}
+
+.categories-list li { 
+  display: flex; 
+  justify-content: space-between; 
+  align-items: center; 
+  padding: 1.25rem; 
+  border-radius: 12px; 
+  background-color: #fff; 
+  border: 1px solid #f1f5f9; 
+  margin-bottom: 0.75rem; 
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  transition: all 0.2s ease;
+}
+
+.categories-list li:hover {
+  border-color: #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transform: translateY(-2px);
+}
+.category-info { 
+  display: flex; 
+  align-items: center; 
+  gap: 1.75rem; 
+}
+
+.info-item { 
+  display: flex; 
+  flex-direction: column; 
+  gap: 0.35rem; 
+}
+
+.info-label { 
+  font-size: 0.75rem; 
+  font-weight: 600; 
+  color: #94a3b8; 
+  text-transform: uppercase; 
+}
+
+.category-actions { 
+  display: flex; 
+  align-items: center; 
+  gap: 0.75rem; 
+}
+
+.icon-button { 
+  background: none; 
+  border: none; 
+  cursor: pointer; 
+  font-size: 1.2rem; 
+  opacity: 0.6; 
+  transition: all 0.2s ease; 
+  padding: 0.6rem; 
+  border-radius: 50%; 
+}
+
+.icon-button:hover { 
+  opacity: 1; 
+  background-color: #f1f5f9; 
+}
+
+.icon-button.delete-button:hover { 
+  color: #b91c1c; 
+  background-color: #fee2e2; 
+}
+
+.form-actions { 
+  display: flex; 
+  gap: 0.75rem; 
+  margin-top: 0.5rem;
+}
+
+.form-actions .cta-button.full-width { 
+  flex-grow: 1; 
+}
+
+.cancel-edit-button { 
+  padding: 1rem; 
+  border-radius: 10px; 
+  font-weight: 600; 
+  font-size: 1rem; 
+  background-color: #f1f5f9; 
+  color: #475569; 
+  border: none; 
+  cursor: pointer; 
+  transition: all 0.2s ease; 
+}
+
+.cancel-edit-button:hover { 
+  background-color: #e2e8f0; 
+  transform: translateY(-2px);
+}
+
+.empty-list-message { 
+  text-align: center; 
+  color: #64748b; 
+  padding: 2.5rem 0; 
+  font-size: 1rem;
+  background-color: #f8fafc;
+  border-radius: 10px;
+  border: 1px dashed #e2e8f0;
+}
 
 
 /* --- NOVOS ESTILOS PARA O DATEPICKER --- */

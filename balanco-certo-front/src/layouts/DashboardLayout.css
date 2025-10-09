@@ -3,7 +3,8 @@
 
 .dashboard-layout {
   display: flex;
-  min-height: 100vh;
+  height: 100vh; /* fixa altura da viewport */
+  overflow: hidden; /* evita rolagem do body, só o conteúdo rola */
   background-color: #f8fafc; /* Cor de fundo do conteúdo principal */
 }
 
@@ -17,6 +18,12 @@
   flex-direction: column;
   justify-content: space-between;
   border-right: 1px solid #334155;
+  position: fixed; /* fixa a barra lateral */
+  top: 0;
+  left: 0;
+  bottom: 0;
+  height: 100vh;
+  z-index: 1000;
 }
 
 .logo {
@@ -90,5 +97,7 @@
 .main-content {
   flex-grow: 1;
   padding: 2rem 3rem;
-  overflow-y: auto;
+  overflow-y: auto; /* rolagem apenas no conteúdo principal */
+  margin-left: 280px; /* compensa a sidebar fixa */
+  height: 100vh; /* garante área rolável de tela inteira */
 }

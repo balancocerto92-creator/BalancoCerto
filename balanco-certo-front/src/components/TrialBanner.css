@@ -1,0 +1,50 @@
+/* src/components/TrialBanner.css */
+.trial-banner {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.trial-banner.active {
+  background-color: #ecfeff; /* azul claro */
+  border-color: #bae6fd;
+}
+
+.trial-banner.expired {
+  background-color: #fff7ed; /* laranja claro */
+  border-color: #fed7aa;
+}
+
+.trial-content {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.trial-title {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.trial-subtitle {
+  color: #334155;
+}
+
+.trial-cta {
+  margin-left: auto;
+  background-color: #10b981; /* verde */
+  color: #fff;
+  padding: 0.5rem 0.9rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.trial-cta:hover {
+  background-color: #059669;
+}

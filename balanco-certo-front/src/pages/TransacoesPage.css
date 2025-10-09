@@ -12,6 +12,9 @@
   margin-bottom: 2rem;
 }
 
+.page-title { display: flex; align-items: center; gap: 0.75rem; }
+.page-title .help-hint { margin-left: 0.25rem; }
+
 .page-header h1 {
   font-size: 2.25rem;
   font-weight: 800;
@@ -43,6 +46,31 @@
   align-items: center;
   gap: 0.5rem;
 }
+
+/* Balão de ajuda (Lançamentos) */
+.help-hint { position: relative; display: inline-block; }
+.info-icon {
+  width: 32px; height: 32px; border-radius: 50%;
+  background-color: #f1f5f9; border: 1px solid #e2e8f0;
+  color: #334155; font-weight: 700; cursor: pointer;
+}
+.info-bubble {
+  position: absolute; left: 0; top: calc(100% + 8px);
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.1);
+  padding: 12px 14px; display: inline-block;
+  min-width: 340px; max-width: 480px; z-index: 1000;
+  line-height: 1.4; word-break: normal;
+  opacity: 0; transform: translateY(-6px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  pointer-events: none;
+}
+.help-hint:hover .info-bubble, .help-hint:focus-within .info-bubble, .help-hint.open .info-bubble {
+  opacity: 1; transform: translateY(0); pointer-events: auto;
+}
+.info-bubble strong { display: block; margin-bottom: 6px; color: #0f172a; }
+.info-bubble ul { margin: 0; padding-left: 18px; color: #334155; }
+.info-bubble li { margin-bottom: 6px; }
 
 /* --- CARDS DE RESUMO (KPIs) --- */
 .kpi-cards-container {
@@ -85,9 +113,10 @@
 /* --- BARRA DE FILTROS --- */
 .filter-bar {
   display: flex;
-  gap: 1rem;
+  gap: 0.5rem; /* reduzir espaçamento entre campos */
   align-items: center;
   margin-bottom: 1.5rem;
+  flex-wrap: wrap;
 }
 
 .search-input {
@@ -105,7 +134,29 @@
   background-color: #fff;
   font-size: 1rem;
   color: #334155;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: none !important; /* remove seta nativa */
+  padding-right: 2.25rem; /* espaço para a seta customizada */
 }
+
+/* Remove seta nativa no IE/Edge legado */
+.filter-select::-ms-expand { display: none; }
+
+.filter-bar > .custom-select-wrapper,
+.filter-bar > .button-danger,
+.filter-bar > .month-input {
+  flex: 0 1 auto; /* não crescer; manter largura do conteúdo */
+}
+
+/* busca pode expandir para ocupar espaço sobrando */
+.filter-bar > .search-wrapper {
+  flex: 1 1 320px;
+}
+
+/* garante posicionamento correto da seta customizada */
+.custom-select-wrapper { position: relative; }
 
 /* --- TABELA E CARD DE CONTEÚDO --- */
 .content-card {
@@ -119,6 +170,11 @@
 table {
   width: 100%;
   border-collapse: collapse;
+}
+
+.table-responsive { overflow-x: auto; }
+@media (max-width: 768px) {
+  table { min-width: 720px; }
 }
 
 thead {
@@ -402,6 +458,23 @@ thead .custom-checkbox input[type="checkbox"]:checked + span::after {
   margin-right: 6px;
 }
 
+/* --- RESPONSIVIDADE GLOBAL --- */
+@media (max-width: 1024px) {
+  .kpi-cards-container { grid-template-columns: repeat(2, 1fr); }
+  .header-actions { flex-wrap: wrap; }
+}
+
+@media (max-width: 768px) {
+  .kpi-cards-container { grid-template-columns: 1fr; }
+  .filter-bar > * { flex: 1 1 100%; }
+  .page-header h1 { font-size: 1.75rem; }
+  .button-secondary { padding: 0.6rem 1rem; }
+}
+
+@media (max-width: 560px) {
+  .info-bubble { max-width: 92vw; }
+}
+
 .status-tag.pago {
   background-color: #f0fdf4; /* Verde bem claro */
   color: #15803d; /* Verde escuro */
@@ -434,6 +507,45 @@ thead .custom-checkbox input[type="checkbox"]:checked + span::after {
 /* Adicione ao final de TransacoesPage.css */
 
 .creation-date {
-  font-size: 0.85rem;
-  color: #64748b; /* Cor cinza para a data de cadastro */
+  font-size: inherit; /* manter igual às demais células */
+  color: var(--texto-escuro); /* mesma cor do texto padrão (ex.: Data de pagamento) */
+}
+/* --- Customização do React DatePicker (calendário) --- */
+.react-datepicker {
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.08) !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+.react-datepicker__header {
+  background-color: var(--azul-marinho) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+.react-datepicker__current-month, .react-datepicker-time__header, .react-datepicker-year-header {
+  color: #fff !important;
+  font-weight: 700 !important;
+}
+.react-datepicker__day-name { color: #e2e8f0 !important; }
+.react-datepicker__day, .react-datepicker__month-text, .react-datepicker__quarter-text, .react-datepicker__year-text {
+  border-radius: 8px !important;
+}
+
+/* --- Overrides: remover setas dos selects da barra de filtros --- */
+.filter-bar .custom-select-wrapper::after,
+.filter-bar .custom-select-wrapper:hover::after {
+  content: none !important;
+  display: none !important;
+}
+.filter-bar .filter-select {
+  padding-right: 0.75rem !important; /* sem espaço para seta customizada */
+}
+.react-datepicker__day--selected, .react-datepicker__day--keyboard-selected {
+  background-color: var(--verde-principal) !important;
+  color: #fff !important;
+}
+.react-datepicker__day--today { border: 1px solid var(--verde-principal) !important; }
+
+.month-input {
+  border-radius: 10px;
+  font-weight: 600;
 }

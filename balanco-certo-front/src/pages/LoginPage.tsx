@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { supabase } from '../supabaseClient';
 import './AuthPages.css';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import logoBalançoCerto from '../assets/balanco-Certo-logo.png';
 
 const LoginPage = () => {
@@ -14,6 +14,8 @@ const LoginPage = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [showResendLink, setShowResendLink] = useState(false);
+  const [searchParams] = useSearchParams();
+  const trialExpired = searchParams.get('trialExpired') === '1';
 
   const handleResendConfirmation = async () => {
     setLoading(true);
@@ -76,6 +78,12 @@ const LoginPage = () => {
         </Link>
         <h2>Bem-vindo de volta!</h2>
         <p className="auth-subtitle">Acesse sua conta para ver seu balanço.</p>
+
+        {trialExpired && (
+          <p className="auth-message error" style={{ marginTop: '0.5rem' }}>
+            Seu período de teste de 7 dias terminou. Faça login para assinar e continuar usando.
+          </p>
+        )}
         
         <form onSubmit={handleLogin} className="auth-form">
           <input type="email" placeholder="Seu e-mail" value={email} onChange={(e) => setEmail(e.target.value)} required />

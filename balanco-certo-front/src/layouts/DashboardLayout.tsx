@@ -7,6 +7,7 @@ import { supabase } from '../supabaseClient';
 import type { AuthUser as User } from '@supabase/supabase-js';
 import './DashboardLayout.css';
 import UserProfile from '../components/UserProfile';
+import TrialBanner from '../components/TrialBanner';
 
 // 1. IMPORTA A IMAGEM DA LOGO DA PASTA ASSETS
 import logoImage from '../assets/balanco-Certo-logo.png'; 
@@ -16,8 +17,9 @@ import {
     HomeIcon, 
     ListIcon, 
     ReportIcon, 
-    CreditCardIcon 
-} from '../components/Icons/Index';
+    CreditCardIcon,
+    FinanceIcon
+} from '../components/Icons/index';
 
 const DashboardLayout = () => {
   const navigate = useNavigate();
@@ -73,12 +75,16 @@ const DashboardLayout = () => {
                 <NavLink to="/dashboard/credit-cards" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
                     <CreditCardIcon /> Cartões de Crédito
                 </NavLink>
+                <NavLink to="/dashboard/finance" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+                    <FinanceIcon /> Configurações Financeiras
+                </NavLink>
             </nav>
         </div>
         
         <UserProfile onLogout={handleLogout} currentUser={user} />
       </aside>
       <main className="main-content">
+        <TrialBanner />
         <Outlet />
       </main>
     </div>

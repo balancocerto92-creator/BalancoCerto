@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { supabase } from '../supabaseClient';
+import { getTrialStatus } from '../utils/trial';
 import { NumericFormat } from 'react-number-format';
 import './AddCardPurchaseModal.css';
 
@@ -35,6 +36,16 @@ const formatDateForInput = (date: Date): string => {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+};
+
+const addMonthsToDateString = (dateStr: string, months: number): string => {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, (m || 1) - 1, d || 1));
+  dt.setUTCMonth(dt.getUTCMonth() + months);
+  const yy = dt.getUTCFullYear();
+  const mm = String(dt.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(dt.getUTCDate()).padStart(2, '0');
+  return `${yy}-${mm}-${dd}`;
 };
 
 const AddCardPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose, onPurchaseAdded, cardId, categories, purchaseToEdit }) => {
@@ -89,6 +100,15 @@ const AddCardPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Usuário não autenticado.");
+      const createdAtStr = session.user?.created_at;
+      if (createdAtStr) {
+        const { expired } = getTrialStatus(createdAtStr);
+        if (expired && !purchaseToEdit) {
+          setError('Seu teste gratuito de 7 dias terminou. Para continuar criando novas compras, acesse Configurações Financeiras para regularizar seu plano.');
+          setLoading(false);
+          return;
+        }
+      }
       const token = session.access_token;
       const purchaseData = {
         description,
@@ -102,7 +122,22 @@ const AddCardPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose
       if (purchaseToEdit) {
         await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/credit-card-purchases/${purchaseToEdit.id}`, purchaseData, { headers: { Authorization: `Bearer ${token}` } });
       } else {
-        await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/credit-card-purchases`, purchaseData, { headers: { Authorization: `Bearer ${token}` } });
+        const total = isInstallment && totalInstallments ? parseInt(totalInstallments) : 0;
+        if (isInstallment && total > 1) {
+          const baseDate = purchaseDate;
+          const requests = Array.from({ length: total }).map((_, idx) => {
+            const body = {
+              ...purchaseData,
+              purchase_date: addMonthsToDateString(baseDate, idx),
+              total_installments: total,
+              current_installment: idx + 1,
+            };
+            return axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/credit-card-purchases`, body, { headers: { Authorization: `Bearer ${token}` } });
+          });
+          await Promise.all(requests);
+        } else {
+          await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/credit-card-purchases`, purchaseData, { headers: { Authorization: `Bearer ${token}` } });
+        }
       }
       onPurchaseAdded();
       onClose();

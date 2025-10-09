@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { supabase } from '../supabaseClient';
+import { getTrialStatus } from '../utils/trial';
 import './RecurringTransactionsModal.css';
 
 // Removemos todas as dependências do react-datepicker
@@ -74,6 +75,15 @@ const RecurringTransactionsModal: React.FC<RecurringModalProps> = ({ isOpen, onC
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error("Usuário não autenticado.");
+        const createdAtStr = session.user?.created_at;
+        if (createdAtStr) {
+          const { expired } = getTrialStatus(createdAtStr);
+          if (expired && !editingRecurrence) {
+            setError('Seu teste gratuito de 7 dias terminou. Para continuar criando novas recorrências, acesse Configurações Financeiras para regularizar seu plano.');
+            setLoading(false);
+            return;
+          }
+        }
         const token = session.access_token;
         const recurrenceData = {
           description, amount: parseFloat(amount), type,

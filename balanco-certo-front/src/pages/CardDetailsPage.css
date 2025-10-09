@@ -49,6 +49,17 @@
     height: 24px;
 }
 
+.cta-button.secondary {
+    background-color: #f8fafc;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+
+.cta-button.secondary:hover {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
 .card-details-container .header-actions {
     display: flex;
     align-items: center;
@@ -169,5 +180,24 @@
   text-align: center;
   padding: 4px 0;
 }
+
+/* --- Resumo da fatura do mês --- */
+.invoice-summary {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.summary-item {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.summary-title { color: #64748b; font-weight: 600; }
+.summary-value { font-size: 1.25rem; font-weight: 700; color: var(--texto-escuro); }
 
 

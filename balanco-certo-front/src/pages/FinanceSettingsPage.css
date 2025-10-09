@@ -1,0 +1,64 @@
+/* src/pages/FinanceSettingsPage.css */
+.finance-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.finance-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.finance-header h2 {
+  margin: 0;
+}
+
+.trial-warning {
+  color: #b45309;
+  background-color: #fff7ed;
+  border: 1px solid #fed7aa;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+}
+
+.trial-info {
+  color: #0f172a;
+  background-color: #ecfeff;
+  border: 1px solid #bae6fd;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+}
+
+.finance-actions {
+  margin-left: auto;
+}
+
+.invoices-section {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.invoices-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.invoices-table th,
+.invoices-table td {
+  text-align: left;
+  padding: 0.6rem 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.invoices-table th {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.empty-list-message {
+  color: #64748b;
+}

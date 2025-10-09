@@ -12,8 +12,26 @@ import './TransacoesPage.css';
 import AddTransactionModal from '../components/AddTransactionModal';
 import CategoriesModal from '../components/CategoriesModal';
 import RecurringTransactionsModal from '../components/RecurringTransactionsModal';
+import ConfirmModal from '../components/ConfirmModal';
+import { useToast } from '../contexts/ToastContext';
 
 registerLocale('pt-BR', ptBR);
+
+// Normaliza qualquer valor de data para o formato "YYYY-MM-DD"
+const normalizeDateStr = (raw: any): string | null => {
+  if (!raw) return null;
+  const str = String(raw);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  let d = new Date(str);
+  if (isNaN(d.getTime())) {
+    // tenta extrair os 10 primeiros caracteres como YYYY-MM-DD
+    const maybe = str.substring(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(maybe)) return maybe;
+    d = new Date(`${maybe}T00:00:00Z`);
+  }
+  if (isNaN(d.getTime())) return null;
+  return d.toISOString().split('T')[0];
+};
 
 type Transaction = {
   id: number;
@@ -26,6 +44,8 @@ type Transaction = {
   status?: 'pago' | 'pendente';
   due_date?: string;
   transaction_date: string;
+  payment_date?: string;
+  entry_date?: string;
 };
 
 type Category = {
@@ -50,6 +70,7 @@ const TransacoesPage = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [helpVisible, setHelpVisible] = useState(false);
 
   const [isTransactionModalOpen, setTransactionModalOpen] = useState(false);
   const [isCategoriesModalOpen, setCategoriesModalOpen] = useState(false);
@@ -57,6 +78,9 @@ const TransacoesPage = () => {
 
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [selectedTransactions, setSelectedTransactions] = useState<number[]>([]);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
+  const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
+  const { showToast } = useToast();
 
   // Estados de filtro
   const [searchTerm, setSearchTerm] = useState('');
@@ -91,19 +115,23 @@ const TransacoesPage = () => {
     fetchData();
   }, []);
 
-  const handleDelete = async (transactionId: number) => {
-    if (!window.confirm('Tem certeza que deseja apagar este lançamento? Esta ação não pode ser desfeita.')) {
-      return;
-    }
+  const openDeleteConfirm = (transactionId: number) => {
+    setConfirmDeleteId(transactionId);
+  };
+
+  const performDelete = async () => {
+    if (confirmDeleteId == null) return;
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Sessão não encontrada.');
       const token = session.access_token;
-      const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/transactions/${transactionId}`;
+      const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/transactions/${confirmDeleteId}`;
       await axios.delete(apiUrl, { headers: { 'Authorization': `Bearer ${token}` } });
       fetchData();
     } catch (err) {
-      alert('Ocorreu um erro ao deletar o lançamento.');
+      showToast({ type: 'error', message: 'Ocorreu um erro ao deletar o lançamento.' });
+    } finally {
+      setConfirmDeleteId(null);
     }
   };
 
@@ -128,14 +156,17 @@ const TransacoesPage = () => {
       link.click();
       link.remove();
     } catch (err) {
-      alert('Não foi possível exportar os dados.');
+      showToast({ type: 'error', message: 'Não foi possível exportar os dados.' });
       console.error(err);
     }
   };
 
   const handleBulkDelete = async () => {
     if (selectedTransactions.length === 0) return;
-    if (!window.confirm(`Tem certeza que deseja apagar ${selectedTransactions.length} lançamento(s)?`)) return;
+    setConfirmBulkOpen(true);
+  };
+
+  const performBulkDelete = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Sessão não encontrada.');
@@ -145,7 +176,9 @@ const TransacoesPage = () => {
       setSelectedTransactions([]);
       fetchData();
     } catch (err) {
-      alert('Ocorreu um erro ao tentar apagar os lançamentos.');
+      showToast({ type: 'error', message: 'Ocorreu um erro ao tentar apagar os lançamentos.' });
+    } finally {
+      setConfirmBulkOpen(false);
     }
   };
 
@@ -163,7 +196,7 @@ const TransacoesPage = () => {
       await axios.put(apiUrl, transactionData, { headers: { 'Authorization': `Bearer ${token}` } });
       fetchData();
     } catch (err) {
-      alert('Não foi possível atualizar o lançamento.');
+      showToast({ type: 'error', message: 'Não foi possível atualizar o lançamento.' });
     }
   };
 
@@ -194,7 +227,13 @@ const TransacoesPage = () => {
   }, [dateFilter, customMonth]);
 
   const filteredTransactions = useMemo(() => {
-    const todayStr = new Date().toLocaleDateString('en-CA');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayStr = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD em horário local
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const yesterdayStr = yesterday.toLocaleDateString('en-CA');
+    const todayYearMonth = todayStr.substring(0, 7);
     return transactions.filter(t => {
       if (searchTerm) {
         const lowerCaseSearchTerm = searchTerm.toLowerCase();
@@ -207,14 +246,24 @@ const TransacoesPage = () => {
         else if (filterStatus === 'pendente') { if (t.status !== 'pendente' || (t.due_date && t.due_date < todayStr)) return false; }
         else { if (t.status !== filterStatus) return false; }
       }
-      const transactionDate = new Date(t.transaction_date || t.created_at);
-      const today = new Date(); today.setHours(0, 0, 0, 0);
+      // NOVA REGRA: o período SEMPRE é determinado pela Data de cadastro
+      const entry = normalizeDateStr((t as any).entry_date);
+      const created = normalizeDateStr(t.created_at);
+      const effectiveDateStr = entry || created || null;
+      if (!effectiveDateStr) return dateFilter === 'all'; // sem data: só aparece no filtro "Todo o período"
+      // Construímos uma Date local sem UTC para evitar deslocamentos de timezone
+      const transactionDate = new Date(`${effectiveDateStr}T00:00`);
+      const effectiveYearMonth = effectiveDateStr.substring(0, 7);
       switch (dateFilter) {
-        case 'today': return transactionDate.toDateString() === today.toDateString();
-        case 'yesterday': { const yesterday = new Date(); yesterday.setDate(today.getDate() - 1); return transactionDate.toDateString() === yesterday.toDateString(); }
-        case 'last7days': { const sevenDaysAgo = new Date(); sevenDaysAgo.setDate(today.getDate() - 6); sevenDaysAgo.setHours(0, 0, 0, 0); return transactionDate >= sevenDaysAgo; }
-        case 'thisMonth': return transactionDate.getMonth() === today.getMonth() && transactionDate.getFullYear() === today.getFullYear();
-        case 'custom': { if (!customMonth) return true; return transactionDate.getFullYear() === customMonth.getFullYear() && transactionDate.getMonth() === customMonth.getMonth(); }
+        case 'today': return effectiveDateStr === todayStr;
+        case 'yesterday': return effectiveDateStr === yesterdayStr;
+        case 'last7days': {
+          const diffMs = new Date(`${todayStr}T00:00`).getTime() - transactionDate.getTime();
+          const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+          return diffDays >= 0 && diffDays <= 6;
+        }
+        case 'thisMonth': return effectiveYearMonth === todayYearMonth;
+        case 'custom': { if (!customMonth) return true; const customYearMonth = new Date(customMonth).toLocaleDateString('en-CA').substring(0, 7); return effectiveYearMonth === customYearMonth; }
         default: return true;
       }
     });
@@ -276,7 +325,30 @@ const TransacoesPage = () => {
     <>
       <div className="transacoes-container">
         <header className="page-header">
-          <h1>{pageTitle}</h1>
+          <div className="page-title">
+            <h1>{pageTitle}</h1>
+            <div className={helpVisible ? 'help-hint open' : 'help-hint'} aria-live="polite">
+              <button
+                className="info-icon"
+                title="Ajuda"
+                aria-expanded={helpVisible}
+                aria-controls="tx-help"
+                onClick={() => setHelpVisible(v => !v)}
+              >?
+              </button>
+              <div id="tx-help" className="info-bubble" role="dialog" aria-label="Ajuda – Lançamentos">
+                <strong>Ajuda – Lançamentos</strong>
+                <ul>
+                  <li><b>Busca:</b> Filtra por descrição ou código do lançamento.</li>
+                  <li><b>Tipo:</b> Receita ou Despesa.</li>
+                  <li><b>Categoria:</b> Selecione para segmentar os resultados.</li>
+                  <li><b>Status:</b> Pendente, Pago ou Vencido (com base no vencimento).</li>
+                  <li><b>Período:</b> Usa a data de cadastro/entrada para compor o mês.</li>
+                </ul>
+                <p>Dica: combine filtros para análises mais precisas e use Exportar.</p>
+              </div>
+            </div>
+          </div>
           <div className="header-actions">
             <button className="button-secondary" onClick={() => setRecurringModalOpen(true)}>Recorrências</button>
             <button className="button-secondary" onClick={() => setCategoriesModalOpen(true)}>Gerenciar Categorias</button>
@@ -304,6 +376,7 @@ const TransacoesPage = () => {
         <div className="content-card">
           {loading ? <p>Carregando...</p> : error ? <p style={{ color: 'red' }}>{error}</p> : (
             <>
+              <div className="table-responsive">
               <table>
                 <thead>
                   <tr>
@@ -314,7 +387,8 @@ const TransacoesPage = () => {
                     <th>Valor</th>
                     <th>Categoria</th>
                     <th>Tipo</th>
-                    <th>Data Efetiva</th>
+                    <th>Data de Vencimento</th>
+                    <th>Data de Pagamento</th>
                     <th>Data de Cadastro</th>
                     <th>Ações</th>
                   </tr>
@@ -332,13 +406,19 @@ const TransacoesPage = () => {
                           <td>{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(t.amount)}</td>
                           <td>{category ? <span className="category-tag" style={{ backgroundColor: category.color }}>{category.name}</span> : <span className="no-category-tag">N/A</span>}</td>
                           <td><span className={`tag ${t.type}`}>{t.type}</span></td>
-                          <td>{new Date(t.transaction_date).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
-                          <td className="creation-date">{new Date(t.created_at).toLocaleDateString('pt-BR', { timeZone: 'UTC' })}</td>
+                          <td>{t.due_date ? new Date(`${t.due_date}T00:00:00Z`).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '-'}</td>
+                          <td>{t.status === 'pago' && t.payment_date ? new Date(`${t.payment_date}T00:00:00Z`).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '-'}</td>
+                          <td className="creation-date">{
+                            (() => {
+                              const cadastroStr = normalizeDateStr((t as any).entry_date) || normalizeDateStr(t.created_at);
+                              return cadastroStr ? new Date(`${cadastroStr}T00:00:00Z`).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : '-';
+                            })()
+                          }</td>
                           <td>
                             <div className="action-icons">
                               {t.status === 'pendente' && ( <span onClick={() => handleMarkAsPaid(t)} title="Marcar como pago">✅</span> )}
                               <span onClick={() => handleOpenEditModal(t)} style={{cursor: 'pointer'}}>✏️</span>
-                              <span onClick={() => handleDelete(t.id)} style={{cursor: 'pointer'}}>🗑️</span>
+                              <span onClick={() => openDeleteConfirm(t.id)} style={{cursor: 'pointer'}}>🗑️</span>
                             </div>
                           </td>
                         </tr>
@@ -349,6 +429,7 @@ const TransacoesPage = () => {
                   )}
                 </tbody>
               </table>
+              </div>
               {totalPages > 1 && (
                 <div className="pagination-controls">
                   <button onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1}>Anterior</button>
@@ -381,6 +462,26 @@ const TransacoesPage = () => {
         onClose={() => setRecurringModalOpen(false)}
         onRecurrenceChange={fetchData}
         categories={categories}
+      />
+
+      <ConfirmModal
+        open={confirmDeleteId !== null}
+        title="Excluir Lançamento"
+        message="Tem certeza que deseja apagar este lançamento? Esta ação não pode ser desfeita."
+        confirmLabel="OK"
+        cancelLabel="Cancelar"
+        onConfirm={performDelete}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
+
+      <ConfirmModal
+        open={confirmBulkOpen}
+        title="Excluir Selecionados"
+        message={`Tem certeza que deseja apagar ${selectedTransactions.length} lançamento(s)?`}
+        confirmLabel="OK"
+        cancelLabel="Cancelar"
+        onConfirm={performBulkDelete}
+        onCancel={() => setConfirmBulkOpen(false)}
       />
     </>
   );

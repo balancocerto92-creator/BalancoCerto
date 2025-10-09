@@ -15,6 +15,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   if (!session) {
     return <Navigate to="/login" />;
   }
+
+  // Não removemos o acesso após o período de teste.
   
   // Se houver uma sessão, renderiza a página filha
   return <>{children}</>;

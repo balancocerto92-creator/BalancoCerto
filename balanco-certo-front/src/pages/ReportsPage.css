@@ -1,0 +1,224 @@
+/* src/pages/ReportsPage.css */
+
+.reports-container { }
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.page-title { display: flex; align-items: center; gap: 0.75rem; }
+.page-title .help-hint { margin-left: 0.25rem; }
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+/* Balão de ajuda (Relatórios) */
+.help-hint { position: relative; display: inline-block; }
+.info-icon {
+  width: 32px; height: 32px; border-radius: 50%;
+  background-color: #f1f5f9; border: 1px solid #e2e8f0;
+  color: #334155; font-weight: 700; cursor: pointer;
+}
+.info-bubble {
+  position: absolute; left: 0; top: calc(100% + 8px);
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.1);
+  padding: 12px 14px; display: inline-block;
+  min-width: 340px; max-width: 480px; z-index: 1000;
+  line-height: 1.4; word-break: normal;
+  opacity: 0; transform: translateY(-6px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  pointer-events: none;
+}
+.help-hint:hover .info-bubble, .help-hint:focus-within .info-bubble, .help-hint.open .info-bubble {
+  opacity: 1; transform: translateY(0); pointer-events: auto;
+}
+.info-bubble strong { display: block; margin-bottom: 6px; color: #0f172a; }
+.info-bubble ul { margin: 0; padding-left: 18px; color: #334155; }
+.info-bubble li { margin-bottom: 6px; }
+
+/* Seções detalhadas dentro do painel de ajuda */
+.help-sections { display: grid; gap: 10px; }
+.help-section { padding: 6px 0; border-top: 1px dashed #e2e8f0; }
+.help-section:first-child { border-top: none; }
+.help-title { font-weight: 600; color: #0f172a; display: block; margin-bottom: 4px; }
+
+.button-secondary {
+  background-color: #fff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.button-secondary:hover { background-color: #f8fafc; }
+
+.filter-bar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.filter-group { display: flex; flex-direction: column; gap: 0.5rem; }
+.filter-group label { font-size: 0.9rem; color: #475569; font-weight: 600; }
+.filter-group .date-input {
+  width: 100%;
+  padding: 0.7rem 0.85rem; border: 1px solid #cbd5e1; border-radius: 10px;
+  font-size: 0.95rem; color: #0f172a; background-color: #fff;
+}
+
+/* Estilo global do React DatePicker dentro de Relatórios */
+.react-datepicker {
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.react-datepicker__header {
+  background-color: var(--azul-marinho);
+  border-bottom: 1px solid #e2e8f0;
+}
+.react-datepicker__current-month, .react-datepicker-time__header, .react-datepicker-year-header {
+  color: #fff;
+  font-weight: 700;
+}
+.react-datepicker__day-name { color: #e2e8f0; }
+.react-datepicker__day, .react-datepicker__month-text, .react-datepicker__quarter-text, .react-datepicker__year-text { border-radius: 8px; }
+.react-datepicker__day--selected, .react-datepicker__day--keyboard-selected { background-color: var(--verde-principal); color: #fff; }
+.react-datepicker__day--today { border: 1px solid var(--verde-principal); }
+
+.basis-toggle { display: flex; gap: 0.5rem; }
+.toggle-option {
+  background-color: #fff;
+  border: 1px solid #cbd5e1;
+  color: #334155; font-weight: 600;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.toggle-option.active { background-color: var(--verde-principal); color: #fff; border-color: var(--verde-principal); }
+
+/* Novos estilos para filtros adicionais */
+.checkbox-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+.checkbox-item { display: flex; align-items: center; gap: 0.5rem; color: #334155; }
+.cat-chip { display: inline-block; padding: 0.15rem 0.5rem; border-radius: 999px; color: #fff; font-size: 0.75rem; }
+.status-toggle { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+/* Campo de multi-seleção de categorias */
+.multi-select { position: relative; }
+.multi-select-control {
+  background-color: #fff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  padding: 0.55rem 0.9rem;
+  border-radius: 8px;
+  font-weight: 600;
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.multi-caret { margin-left: 0.5rem; color: #64748b; }
+.multi-dropdown {
+  position: absolute; left: 0; top: calc(100% + 8px);
+  background: #fff; border: 1px solid #e2e8f0; border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.1);
+  padding: 10px; min-width: 280px; z-index: 1000;
+  display: flex; flex-direction: column; gap: 0.5rem;
+}
+.multi-search { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #cbd5e1; border-radius: 8px; }
+.multi-option { display: flex; align-items: center; gap: 0.5rem; color: #334155; }
+.filter-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+.kpi-cards-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.kpi-card {
+  background-color: #fff;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+}
+.card-title { font-size: 0.9rem; font-weight: 500; color: #64748b; margin-bottom: 0.5rem; }
+.card-value { font-size: 1.75rem; font-weight: 700; color: var(--texto-escuro); }
+.card-value.receita { color: var(--verde-principal); }
+.card-value.despesa { color: #ef4444; }
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.chart-card {
+  background-color: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+}
+.card-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+.card-header h3 { color: var(--texto-escuro); }
+/* ajuda por card: bolha um pouco menor */
+.card-header .help-hint .info-bubble { min-width: 280px; }
+.card-header .info-icon { width: 24px; height: 24px; }
+
+.bar-grid { display: flex; flex-direction: column; gap: 0.75rem; }
+.bar-row { display: grid; grid-template-columns: 120px 1fr 120px; align-items: center; gap: 0.75rem; }
+.bar-label { color: #334155; font-weight: 600; }
+.bar-track { display: flex; gap: 2px; height: 16px; background-color: #f1f5f9; border-radius: 8px; overflow: hidden; }
+.bar { height: 100%; }
+.bar.receita { background-color: var(--verde-principal); }
+.bar.despesa { background-color: #ef4444; }
+.bar-values { text-align: right; color: #334155; font-weight: 600; }
+
+.pie-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.75rem; }
+.pie-list li { display: grid; grid-template-columns: 16px 1fr auto; align-items: center; gap: 0.75rem; }
+.dot { width: 12px; height: 12px; border-radius: 999px; }
+.cat-name { color: #334155; }
+.cat-value { font-weight: 600; color: #334155; }
+
+/* Novos estilos: Top 5 e Status */
+.top-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.top-list li { display: grid; grid-template-columns: 1fr 1fr auto; align-items: center; gap: 0.75rem; }
+.top-desc { color: #334155; }
+.top-cat { color: #64748b; }
+.top-val { font-weight: 700; color: var(--texto-escuro); }
+
+.status-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.status-list li { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 0.75rem; }
+.status-name { color: #334155; font-weight: 600; }
+.status-count { color: #64748b; }
+.status-total { font-weight: 700; color: var(--texto-escuro); }
+
+/* --- RESPONSIVIDADE (Relatórios) --- */
+@media (max-width: 1200px) {
+  .filter-bar { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 992px) {
+  .kpi-cards-container { grid-template-columns: repeat(2, 1fr); }
+  .charts-grid { grid-template-columns: 1fr; }
+  .header-actions { flex-wrap: wrap; }
+}
+
+@media (max-width: 680px) {
+  .filter-bar { grid-template-columns: 1fr; }
+  .button-secondary { padding: 0.6rem 1rem; }
+  .page-header h1 { font-size: 1.9rem; }
+}

@@ -7,6 +7,63 @@ const cors = require('cors');
 require('dotenv').config();
 const { Parser } = require('json2csv');
 const supabase = require('./config/supabaseClient');
+// --- Mercado Pago SDK (compatível v1 e v2) ---
+let mercadopago;
+let mpV2Config = null;
+let isMPv2 = false;
+try {
+  mercadopago = require('mercadopago');
+  // Se for v2, haverá MercadoPagoConfig e classes; v1 tem .configure e objetos com .preapproval/.payment
+  if (mercadopago?.MercadoPagoConfig) {
+    const { MercadoPagoConfig } = mercadopago;
+    mpV2Config = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
+    isMPv2 = true;
+  } else if (mercadopago?.configure) {
+    mercadopago.configure({ access_token: process.env.MP_ACCESS_TOKEN });
+  }
+} catch (e) {
+  console.warn('Mercado Pago SDK não instalado. Instale com: npm i mercadopago');
+}
+
+// Wrappers para chamadas da API (funcionam tanto na v1 quanto na v2)
+async function mpPreapprovalCreate(data) {
+  if (!mercadopago) throw new Error('SDK Mercado Pago ausente no servidor.');
+  // v2
+  if (isMPv2 && mercadopago?.PreApproval && mpV2Config) {
+    const pre = new mercadopago.PreApproval(mpV2Config);
+    // SDK v2 exige o objeto dentro de { body }
+    return await pre.create({ body: data });
+  }
+  // v1
+  if (mercadopago?.preapproval?.create) {
+    return await mercadopago.preapproval.create(data);
+  }
+  throw new Error('API preapproval.create indisponível. Verifique a versão do SDK.');
+}
+
+async function mpPreapprovalGet(id) {
+  if (!mercadopago) throw new Error('SDK Mercado Pago ausente no servidor.');
+  if (isMPv2 && mercadopago?.PreApproval && mpV2Config) {
+    const pre = new mercadopago.PreApproval(mpV2Config);
+    return await pre.get({ id });
+  }
+  if (mercadopago?.preapproval?.get) {
+    return await mercadopago.preapproval.get(id);
+  }
+  throw new Error('API preapproval.get indisponível. Verifique a versão do SDK.');
+}
+
+async function mpPaymentGetById(id) {
+  if (!mercadopago) throw new Error('SDK Mercado Pago ausente no servidor.');
+  if (isMPv2 && mercadopago?.Payment && mpV2Config) {
+    const pay = new mercadopago.Payment(mpV2Config);
+    return await pay.get({ id });
+  }
+  if (mercadopago?.payment?.findById) {
+    return await mercadopago.payment.findById(id);
+  }
+  throw new Error('API payment.get/findById indisponível. Verifique a versão do SDK.');
+}
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -24,6 +81,19 @@ function calculateNextRunDate(currentDate, frequency) {
     nextDate.setFullYear(nextDate.getFullYear() + 1);
   }
   return nextDate;
+}
+
+// --- Validação de URL pública para back_url (MP não aceita localhost) ---
+function isValidBackUrl(urlStr) {
+  try {
+    const u = new URL(urlStr);
+    // Requer HTTPS e não permite localhost/127.0.0.1
+    if (u.protocol !== 'https:') return false;
+    if (['localhost', '127.0.0.1'].includes(u.hostname)) return false;
+    return true;
+  } catch (_) {
+    return false;
+  }
 }
 
 // --- 4. DEFINIÇÃO DAS ROTAS ---
@@ -301,6 +371,39 @@ app.get('/api/credit-cards/:id', async (req, res) => {
     }
 });
 
+// ROTA [PUT] - Atualizar dados de um cartão de crédito
+app.put('/api/credit-cards/:id', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) return res.status(401).json({ error: 'Acesso não autorizado.' });
+        const { data: { user } } = await supabase.auth.getUser(token);
+        if (!user) return res.status(401).json({ error: 'Token inválido.' });
+        const { data: profile } = await supabase.from('profiles').select('organization_id').eq('id', user.id).single();
+        if (!profile) return res.status(404).json({ error: 'Perfil não encontrado.' });
+
+        const { id } = req.params;
+        const { name, card_brand, card_color, closing_day, due_day } = req.body;
+        if (!name || !closing_day || !due_day) {
+            return res.status(400).json({ error: 'Nome, dia de fechamento e dia de vencimento são obrigatórios.' });
+        }
+
+        const { data: updatedCard, error } = await supabase
+            .from('credit_cards')
+            .update({ name, card_brand, card_color, closing_day, due_day })
+            .eq('id', id)
+            .eq('organization_id', profile.organization_id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        if (!updatedCard) return res.status(404).json({ error: 'Cartão não encontrado ou sem permissão para editar.' });
+
+        res.status(200).json(updatedCard);
+    } catch (error) {
+        res.status(500).json({ error: 'Erro ao atualizar cartão de crédito.' });
+    }
+});
+
 // --- ROTA [PUT] PARA EDITAR UMA COMPRA (COM SUPORTE A PARCELAMENTO) ---
 app.put('/api/credit-card-purchases/:id', async (req, res) => {
     try {
@@ -447,10 +550,23 @@ app.post('/api/transactions', async (req, res) => {
       if (userError) return res.status(401).json({ error: 'Token inválido.' });
       const { data: profile } = await supabase.from('profiles').select('organization_id').eq('id', user.id).single();
       if (!profile) return res.status(404).json({ error: 'Perfil do usuário não encontrado.' });
-      const { description, amount, type, category_id, status, due_date, transaction_date } = req.body;
+      const { description, amount, type, category_id, status, due_date, transaction_date, entry_date, created_at } = req.body;
       if (!description || !amount || !type) return res.status(400).json({ error: 'Dados incompletos.' });
+      const todayStr = new Date().toISOString().split('T')[0];
+      const safeEntryDate = entry_date || created_at || todayStr;
+      const safeDueDate = status === 'pendente' ? due_date : null;
+      const safePaymentDate = status === 'pago' ? transaction_date : null;
+
       const { data: newTransaction, error: insertError } = await supabase.from('transactions').insert({
-            description, amount, type, category_id, status, due_date, transaction_date, organization_id: profile.organization_id
+            description,
+            amount,
+            type,
+            category_id,
+            status,
+            entry_date: safeEntryDate,
+            due_date: safeDueDate,
+            payment_date: safePaymentDate,
+            organization_id: profile.organization_id
         }).select().single();
       if (insertError) throw insertError;
       res.status(201).json(newTransaction);
@@ -473,8 +589,16 @@ app.put('/api/transactions/:id', async (req, res) => {
       const { data: transaction, error: transactionError } = await supabase.from('transactions').select('organization_id').eq('id', id).single();
       if (transactionError || !transaction) return res.status(404).json({ error: 'Lançamento não encontrado.' });
       if (transaction.organization_id !== profile.organization_id) { return res.status(403).json({ error: 'Você não tem permissão para editar este lançamento.' }); }
+      const safeDueDate = status === 'pendente' ? due_date : null;
+      const safePaymentDate = status === 'pago' ? transaction_date : null;
       const { data: updatedTransaction, error: updateError } = await supabase.from('transactions').update({
-            description, amount, type, category_id, status, due_date, transaction_date
+            description,
+            amount,
+            type,
+            category_id,
+            status,
+            due_date: safeDueDate,
+            payment_date: safePaymentDate
         }).eq('id', id).select().single();
       if (updateError) throw updateError;
       res.status(200).json(updatedTransaction);
@@ -548,4 +672,168 @@ app.get('/api/transactions/export', async (req, res) => {
 // --- 5. INICIALIZAÇÃO DO SERVIDOR ---
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta http://localhost:${PORT}`);
+});
+// --- ROTAS DE BILLING / MERCADO PAGO ---
+app.post('/api/billing/subscriptions/create', async (req, res) => {
+  try {
+    if (!mercadopago) return res.status(500).json({ error: 'SDK Mercado Pago ausente no servidor.' });
+    if (!process.env.MP_ACCESS_TOKEN) {
+      return res.status(500).json({ error: 'MP_ACCESS_TOKEN não configurado no backend.' });
+    }
+    const token = req.headers.authorization?.split(' ')[1];
+    if (!token) return res.status(401).json({ error: 'Acesso não autorizado.' });
+    const { data: { user } } = await supabase.auth.getUser(token);
+    if (!user) return res.status(401).json({ error: 'Token inválido.' });
+    const { data: profile } = await supabase.from('profiles').select('organization_id').eq('id', user.id).single();
+    if (!profile) return res.status(404).json({ error: 'Perfil não encontrado.' });
+
+    const { plan_id = 'pme', price = 50 } = req.body || {};
+    const backUrlRaw = process.env.APP_URL || '';
+    const backUrlIsValid = isValidBackUrl(backUrlRaw);
+    if (!backUrlIsValid) {
+      return res.status(400).json({
+        error: 'APP_URL inválida para back_url. Defina uma URL HTTPS pública (sem localhost).',
+        hint: 'Exemplo: usar ngrok ou uma URL de produção https e reiniciar o backend.'
+      });
+    }
+    const backUrl = backUrlRaw; // Obrigatório pelo MP
+    const payerEmail = (process.env.MP_TEST_PAYER_EMAIL?.trim()) || user.email; // Use test buyer em sandbox
+
+    const reason = `Assinatura ${plan_id.toUpperCase()} - Organização ${profile.organization_id}`;
+    const preapprovalData = {
+      reason,
+      external_reference: `${profile.organization_id}:${plan_id}`,
+      payer_email: payerEmail,
+      auto_recurring: {
+        frequency: 1,
+        frequency_type: 'months',
+        transaction_amount: Number(price),
+        currency_id: 'BRL'
+      },
+      back_url: backUrl,
+    };
+
+    const response = await mpPreapprovalCreate(preapprovalData);
+    const payload = response?.body || response;
+    // Retorna URL para redirecionar o usuário ao checkout
+    return res.status(200).json({ init_point: payload?.init_point || payload?.sandbox_init_point, id: payload?.id });
+  } catch (error) {
+    // Propaga detalhes do erro do MP para facilitar diagnóstico
+    const details = {
+      message: error?.message,
+      error: error?.error,
+      status: error?.status,
+      cause: error?.cause,
+      data: error?.data
+    };
+    console.error('Erro ao criar assinatura no Mercado Pago:', details);
+    return res.status(500).json({ error: 'Erro interno ao criar assinatura.', details });
+  }
+});
+
+// Webhook de Assinaturas do Mercado Pago
+app.post('/api/billing/webhooks/mercadopago', async (req, res) => {
+  try {
+    if (!mercadopago) return res.status(500).json({ error: 'SDK Mercado Pago ausente no servidor.' });
+    const eventBody = req.body || {};
+    const eventQuery = req.query || {};
+    // Mercado Pago pode enviar via query (?type=payment&id=123) e/ou JSON body.
+    const topic = (eventQuery.type || eventBody.type || eventBody.topic || eventBody.action || '').toLowerCase();
+    const resourceId = (eventQuery.id || eventBody.id || eventBody.data?.id || eventBody.resource?.id || '').toString();
+
+    console.log('📨 Webhook Mercado Pago recebido:', JSON.stringify({ topic, resourceId, raw: eventBody }));
+
+    // Trata eventos de aprovação de assinatura (preapproval)
+    if (topic.includes('preapproval')) {
+      if (!resourceId) {
+        console.warn('Webhook preapproval sem resourceId.');
+        return res.status(200).json({ ok: true });
+      }
+      try {
+        const pr = await mpPreapprovalGet(resourceId);
+        const preapproval = pr?.body || pr;
+        // Exemplo de campos úteis: status, external_reference, payer_email
+        const externalRef = preapproval?.external_reference || '';
+        const status = preapproval?.status || 'unknown';
+        console.log('🔎 Preapproval detalhado:', { status, externalRef });
+        // Podemos marcar estado de assinatura por organização (se houver tabela dedicada)
+        // Nesta versão, apenas reconhecemos e registramos o evento
+        return res.status(200).json({ ok: true });
+      } catch (e) {
+        console.error('Erro ao consultar preapproval:', e.message);
+        return res.status(200).json({ ok: true });
+      }
+    }
+
+    // Trata eventos de pagamento mensal da assinatura
+    if (topic.includes('payment')) {
+      if (!resourceId) {
+        console.warn('Webhook payment sem resourceId.');
+        return res.status(200).json({ ok: true });
+      }
+      try {
+        const payResp = await mpPaymentGetById(resourceId);
+        const payment = payResp?.body || payResp;
+        const status = payment?.status;
+        const transactionAmount = payment?.transaction_amount || payment?.amount || 0;
+        const paymentDateISO = payment?.date_approved || payment?.date_created || new Date().toISOString();
+        const preapprovalId = payment?.preapproval_id || payment?.preapproval_id_id || null;
+        let externalRef = payment?.external_reference || '';
+
+        // Se não houver external_reference no payment, tenta buscar no preapproval
+        if (!externalRef && preapprovalId) {
+          try {
+            const pr = await mercadopago.preapproval.get(preapprovalId);
+            const preapproval = pr?.body || pr;
+            externalRef = preapproval?.external_reference || '';
+          } catch (e) {
+            console.warn('Não foi possível obter external_reference via preapproval:', e.message);
+          }
+        }
+
+        console.log('🔎 Payment detalhado:', { status, transactionAmount, externalRef });
+
+        if (status === 'approved' && externalRef) {
+          // external_reference esperado: "<organization_id>:<plan_id>"
+          const [orgIdStr, planId] = externalRef.split(':');
+          const organizationId = orgIdStr || null;
+          if (organizationId) {
+            // Insere uma despesa paga em transactions como fatura de assinatura
+            const description = `Fatura Mercado Pago – Assinatura ${planId || 'plano'}`;
+            const todayStr = new Date().toISOString().split('T')[0];
+            const paymentDateStr = (paymentDateISO || todayStr).split('T')[0];
+
+            const { error: insertError } = await supabase
+              .from('transactions')
+              .insert({
+                organization_id: organizationId,
+                description,
+                amount: Number(transactionAmount || 0),
+                type: 'despesa',
+                category_id: null,
+                status: 'pago',
+                entry_date: todayStr,
+                payment_date: paymentDateStr,
+              });
+            if (insertError) {
+              console.error('Erro ao registrar fatura da assinatura em transactions:', insertError.message);
+            } else {
+              console.log('✅ Fatura da assinatura registrada em transactions com sucesso.');
+            }
+          }
+        }
+
+        return res.status(200).json({ ok: true });
+      } catch (e) {
+        console.error('Erro ao consultar payment:', e.message);
+        return res.status(200).json({ ok: true });
+      }
+    }
+
+    // Caso não identifique o tópico, apenas acusa recebimento
+    return res.status(200).json({ ok: true });
+  } catch (error) {
+    console.error('Erro ao processar webhook do Mercado Pago:', error.message);
+    return res.status(500).json({ error: 'Erro interno ao processar webhook.' });
+  }
 });

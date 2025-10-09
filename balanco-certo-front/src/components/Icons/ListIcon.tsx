@@ -1,6 +1,4 @@
 // src/components/icons/ListIcon.tsx
-import React from 'react';
-
 export const ListIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"

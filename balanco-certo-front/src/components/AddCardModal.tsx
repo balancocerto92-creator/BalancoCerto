@@ -1,6 +1,6 @@
 // src/components/AddCardModal.tsx
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { supabase } from '../supabaseClient';
 import './AddCardModal.css';

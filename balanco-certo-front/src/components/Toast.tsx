@@ -1,4 +1,3 @@
-import React from 'react';
 import './Toast.css';
 import type { ToastType } from '../contexts/ToastContext';
 

@@ -1,7 +1,7 @@
 // src/pages/CreditCardsPage.tsx
 // VERSÃO 100% COMPLETA para listar e adicionar cartões
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { supabase } from '../supabaseClient';

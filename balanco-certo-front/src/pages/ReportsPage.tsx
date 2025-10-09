@@ -1,7 +1,7 @@
 // src/pages/ReportsPage.tsx
 // Primeira versão de Relatórios com filtros, KPIs e gráficos
 
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import ptBR from 'date-fns/locale/pt-BR';

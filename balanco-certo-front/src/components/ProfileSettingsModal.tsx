@@ -1,7 +1,7 @@
 // src/components/ProfileSettingsModal.tsx
 // Versão completa e final com todos os ajustes solicitados.
 
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import type { AuthUser as User } from '@supabase/supabase-js';
 

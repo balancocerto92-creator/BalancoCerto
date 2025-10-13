@@ -18,27 +18,35 @@ try {
     const { MercadoPagoConfig } = mercadopago;
     mpV2Config = new MercadoPagoConfig({ accessToken: process.env.MP_ACCESS_TOKEN });
     isMPv2 = true;
+    console.log('Mercado Pago SDK inicializado como v2.');
   } else if (mercadopago?.configure) {
     mercadopago.configure({ access_token: process.env.MP_ACCESS_TOKEN });
+    console.log('Mercado Pago SDK inicializado como v1.');
   }
 } catch (e) {
   console.warn('Mercado Pago SDK não instalado. Instale com: npm i mercadopago');
 }
 
 // Wrappers para chamadas da API (funcionam tanto na v1 quanto na v2)
-async function mpPreapprovalCreate(data) {
+async function mpPreferenceCreate(data) {
   if (!mercadopago) throw new Error('SDK Mercado Pago ausente no servidor.');
-  // v2
-  if (isMPv2 && mercadopago?.PreApproval && mpV2Config) {
-    const pre = new mercadopago.PreApproval(mpV2Config);
-    // SDK v2 exige o objeto dentro de { body }
-    return await pre.create({ body: data });
+  try {
+    // v2
+    if (isMPv2 && mercadopago?.Preference && mpV2Config) {
+      const preference = new mercadopago.Preference(mpV2Config);
+      console.log('Dados enviados para Mercado Pago (v2 - Preference):', JSON.stringify(data, null, 2));
+      return await preference.create({ body: data });
+    }
+    // v1
+    if (mercadopago?.preferences?.create) {
+      console.log('Dados enviados para Mercado Pago (v1 - Preference):', JSON.stringify(data, null, 2));
+      return await mercadopago.preferences.create(data);
+    }
+    throw new Error('API preferences.create indisponível. Verifique a versão do SDK.');
+  } catch (mpError) {
+    console.error('Erro detalhado do Mercado Pago ao criar preference:', mpError);
+    throw mpError; // Re-lança o erro para ser capturado pela rota principal
   }
-  // v1
-  if (mercadopago?.preapproval?.create) {
-    return await mercadopago.preapproval.create(data);
-  }
-  throw new Error('API preapproval.create indisponível. Verifique a versão do SDK.');
 }
 
 async function mpPreapprovalGet(id) {
@@ -687,7 +695,7 @@ app.post('/api/billing/subscriptions/create', async (req, res) => {
     const { data: profile } = await supabase.from('profiles').select('organization_id').eq('id', user.id).single();
     if (!profile) return res.status(404).json({ error: 'Perfil não encontrado.' });
 
-    const { plan_id = 'pme', price = 50 } = req.body || {};
+    const { plan_id = 'pme', price = 29.90 } = req.body || {};
     const backUrlRaw = process.env.APP_URL || '';
     const backUrlIsValid = isValidBackUrl(backUrlRaw);
     if (!backUrlIsValid) {
@@ -700,23 +708,32 @@ app.post('/api/billing/subscriptions/create', async (req, res) => {
     const payerEmail = (process.env.MP_TEST_PAYER_EMAIL?.trim()) || user.email; // Use test buyer em sandbox
 
     const reason = `Assinatura ${plan_id.toUpperCase()} - Organização ${profile.organization_id}`;
-    const preapprovalData = {
-      reason,
+    const preferenceData = {
+      items: [
+        {
+          title: reason,
+          quantity: 1,
+          unit_price: Number(price),
+          currency_id: 'BRL',
+        },
+      ],
       external_reference: `${profile.organization_id}:${plan_id}`,
-      payer_email: payerEmail,
-      auto_recurring: {
-        frequency: 1,
-        frequency_type: 'months',
-        transaction_amount: Number(price),
-        currency_id: 'BRL'
+      payer: {
+        email: payerEmail,
       },
-      back_url: backUrl,
+      back_urls: {
+        success: `${backUrl}/assinatura/sucesso`,
+        pending: `${backUrl}/assinatura/pendente`,
+        failure: `${backUrl}/assinatura/falha`,
+      },
+      auto_return: 'approved',
+      notification_url: `${backUrl}/api/billing/webhook`, // Endpoint para webhooks
     };
 
-    const response = await mpPreapprovalCreate(preapprovalData);
+    const response = await mpPreferenceCreate(preferenceData);
     const payload = response?.body || response;
     // Retorna URL para redirecionar o usuário ao checkout
-    return res.status(200).json({ init_point: payload?.init_point || payload?.sandbox_init_point, id: payload?.id });
+    return res.status(200).json({ init_point: payload?.init_point, id: payload?.id });
   } catch (error) {
     // Propaga detalhes do erro do MP para facilitar diagnóstico
     const details = {
@@ -732,7 +749,7 @@ app.post('/api/billing/subscriptions/create', async (req, res) => {
 });
 
 // Webhook de Assinaturas do Mercado Pago
-app.post('/api/billing/webhooks/mercadopago', async (req, res) => {
+app.post('/api/billing/webhook', async (req, res) => {
   try {
     if (!mercadopago) return res.status(500).json({ error: 'SDK Mercado Pago ausente no servidor.' });
     const eventBody = req.body || {};
@@ -775,65 +792,40 @@ app.post('/api/billing/webhooks/mercadopago', async (req, res) => {
         const payResp = await mpPaymentGetById(resourceId);
         const payment = payResp?.body || payResp;
         const status = payment?.status;
-        const transactionAmount = payment?.transaction_amount || payment?.amount || 0;
-        const paymentDateISO = payment?.date_approved || payment?.date_created || new Date().toISOString();
-        const preapprovalId = payment?.preapproval_id || payment?.preapproval_id_id || null;
-        let externalRef = payment?.external_reference || '';
+        const externalRef = payment?.external_reference || '';
 
-        // Se não houver external_reference no payment, tenta buscar no preapproval
-        if (!externalRef && preapprovalId) {
-          try {
-            const pr = await mercadopago.preapproval.get(preapprovalId);
-            const preapproval = pr?.body || pr;
-            externalRef = preapproval?.external_reference || '';
-          } catch (e) {
-            console.warn('Não foi possível obter external_reference via preapproval:', e.message);
-          }
-        }
+        console.log('🔎 Pagamento detalhado:', { status, externalRef });
 
-        console.log('🔎 Payment detalhado:', { status, transactionAmount, externalRef });
+        if (externalRef) {
+          const [organization_id, plan_id] = externalRef.split(':');
+          if (organization_id && plan_id) {
+            const { error: updateError } = await supabase
+              .from('subscriptions')
+              .update({ status: status })
+              .eq('organization_id', organization_id)
+              .eq('plan_id', plan_id);
 
-        if (status === 'approved' && externalRef) {
-          // external_reference esperado: "<organization_id>:<plan_id>"
-          const [orgIdStr, planId] = externalRef.split(':');
-          const organizationId = orgIdStr || null;
-          if (organizationId) {
-            // Insere uma despesa paga em transactions como fatura de assinatura
-            const description = `Fatura Mercado Pago – Assinatura ${planId || 'plano'}`;
-            const todayStr = new Date().toISOString().split('T')[0];
-            const paymentDateStr = (paymentDateISO || todayStr).split('T')[0];
-
-            const { error: insertError } = await supabase
-              .from('transactions')
-              .insert({
-                organization_id: organizationId,
-                description,
-                amount: Number(transactionAmount || 0),
-                type: 'despesa',
-                category_id: null,
-                status: 'pago',
-                entry_date: todayStr,
-                payment_date: paymentDateStr,
-              });
-            if (insertError) {
-              console.error('Erro ao registrar fatura da assinatura em transactions:', insertError.message);
+            if (updateError) {
+              console.error('Erro ao atualizar status da assinatura no banco de dados:', updateError.message);
             } else {
-              console.log('✅ Fatura da assinatura registrada em transactions com sucesso.');
+              console.log(`Assinatura para Organização ${organization_id} e Plano ${plan_id} atualizada para o status: ${status}`);
             }
           }
         }
 
         return res.status(200).json({ ok: true });
       } catch (e) {
-        console.error('Erro ao consultar payment:', e.message);
+        console.error('Erro ao consultar pagamento:', e.message);
         return res.status(200).json({ ok: true });
       }
     }
 
-    // Caso não identifique o tópico, apenas acusa recebimento
+    // Se o tópico não for tratado, apenas loga e retorna OK
+    console.log('Webhook Mercado Pago: Tópico não tratado.', { topic, resourceId });
     return res.status(200).json({ ok: true });
+
   } catch (error) {
-    console.error('Erro ao processar webhook do Mercado Pago:', error.message);
-    return res.status(500).json({ error: 'Erro interno ao processar webhook.' });
+    console.error('Erro no webhook do Mercado Pago:', error);
+    return res.status(500).json({ error: 'Erro interno no webhook.' });
   }
 });

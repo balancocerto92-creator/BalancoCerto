@@ -722,7 +722,7 @@ app.post('/api/billing/subscriptions/create', async (req, res) => {
         email: payerEmail,
       },
       back_urls: {
-        success: `${backUrl}/assinatura/sucesso`,
+        success: `${backUrl}/`,
         pending: `${backUrl}/assinatura/pendente`,
         failure: `${backUrl}/assinatura/falha`,
       },

@@ -1,3 +1,5 @@
+import dayjs from 'dayjs';
+
 // src/utils/trial.ts
 // Utilitários para cálculo de status do período de teste (trial)
 

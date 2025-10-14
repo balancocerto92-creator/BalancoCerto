@@ -4,6 +4,8 @@
 // --- 1. IMPORTAÇÕES, INICIALIZAÇÃO, MIDDLEWARES ---
 const express = require('express');
 const cors = require('cors');
+const crypto = require('crypto'); // Importar módulo crypto para validação de assinatura
+const rateLimit = require('express-rate-limit'); // Importar express-rate-limit
 require('dotenv').config();
 const { Parser } = require('json2csv');
 const supabase = require('./config/supabaseClient');
@@ -25,6 +27,49 @@ try {
   }
 } catch (e) {
   console.warn('Mercado Pago SDK não instalado. Instale com: npm i mercadopago');
+}
+
+// Segredo do webhook para validação de assinatura
+const MP_WEBHOOK_SECRET = process.env.MP_WEBHOOK_SECRET;
+
+// Função para validar a assinatura do webhook
+function verifyMercadoPagoSignature(req) {
+  const signature = req.headers['x-signature'];
+  const timestampHeader = req.headers['x-request-id']; // Mercado Pago usa x-request-id como timestamp
+  const body = JSON.stringify(req.body); // O corpo deve ser o JSON bruto
+
+  if (!signature || !timestampHeader || !MP_WEBHOOK_SECRET) {
+    console.warn('Webhook: Assinatura, timestamp ou segredo ausente.');
+    return false;
+  }
+
+  const timestamp = timestampHeader.split('_')[0]; // Extrai o timestamp do x-request-id
+
+  // Validação de Replay Attack: verifica se o timestamp está dentro de uma janela de 5 minutos
+  const FIVE_MINUTES = 5 * 60 * 1000; // 5 minutos em milissegundos
+  const now = Date.now();
+  const receivedTime = parseInt(timestamp) * 1000; // Converte para milissegundos
+
+  if (isNaN(receivedTime) || (now - receivedTime > FIVE_MINUTES) || (receivedTime - now > FIVE_MINUTES)) {
+    console.warn('Webhook: Timestamp inválido ou fora da janela de validade (replay attack?).');
+    return false;
+  }
+
+  const data = `${timestamp}${body}`;
+  const hmac = crypto.createHmac('sha256', MP_WEBHOOK_SECRET);
+  hmac.update(data);
+  const expectedSignature = hmac.digest('hex');
+
+  // A assinatura do Mercado Pago vem no formato "ts=TIMESTAMP,v1=SIGNATURE"
+  const signatureParts = signature.split(',');
+  const v1Signature = signatureParts.find(part => part.startsWith('v1='));
+  if (!v1Signature) {
+    console.warn('Webhook: Assinatura v1 não encontrada.');
+    return false;
+  }
+  const receivedSignature = v1Signature.substring(3); // Remove "v1="
+
+  return receivedSignature === expectedSignature;
 }
 
 // Wrappers para chamadas da API (funcionam tanto na v1 quanto na v2)
@@ -76,7 +121,35 @@ async function mpPaymentGetById(id) {
 const app = express();
 const PORT = process.env.PORT || 3001;
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10kb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Rate limiting para rotas de autenticação (mais restritivo)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 5, // Limite de 5 requisições por IP a cada 15 minutos
+  message: 'Muitas tentativas de autenticação a partir deste IP, tente novamente após 15 minutos.',
+  standardHeaders: true, // Retorna informações de limite de taxa nos headers `RateLimit-*`
+  legacyHeaders: false, // Desabilita headers `X-RateLimit-*`
+});
+
+// Rate limiting para rotas de API gerais (menos restritivo)
+const apiLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hora
+  max: 100, // Limite de 100 requisições por IP a cada 1 hora
+  message: 'Muitas requisições a partir deste IP, tente novamente após 1 hora.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Aplicar o rate limiting às rotas
+app.use('/api/check-email', authLimiter);
+app.use('/api/login', authLimiter);
+app.use('/api/register', authLimiter);
+app.use('/api/reset-password', authLimiter);
+app.use('/api/transactions', apiLimiter);
+app.use('/api/credit-card-purchases', apiLimiter);
+app.use('/api/billing', apiLimiter);
 
 // --- FUNÇÃO AUXILIAR PARA CALCULAR PRÓXIMA DATA ---
 function calculateNextRunDate(currentDate, frequency) {
@@ -98,6 +171,17 @@ function isValidBackUrl(urlStr) {
     // Requer HTTPS e não permite localhost/127.0.0.1
     if (u.protocol !== 'https:') return false;
     if (['localhost', '127.0.0.1'].includes(u.hostname)) return false;
+
+    // Validação adicional: verifica se o domínio da APP_URL corresponde ao ALLOWED_FRONTEND_ORIGIN
+    const allowedOrigin = process.env.ALLOWED_FRONTEND_ORIGIN;
+    if (allowedOrigin) {
+      const allowedUrl = new URL(allowedOrigin);
+      if (u.hostname !== allowedUrl.hostname) {
+        console.warn(`APP_URL hostname (${u.hostname}) não corresponde ao ALLOWED_FRONTEND_ORIGIN (${allowedUrl.hostname}).`);
+        return false;
+      }
+    }
+
     return true;
   } catch (_) {
     return false;
@@ -724,7 +808,7 @@ app.post('/api/billing/subscriptions/create', async (req, res) => {
       back_urls: {
         success: `${backUrl}/`,
         pending: `${backUrl}/assinatura/pendente`,
-        failure: `${backUrl}/assinatura/falha`,
+        failure: `${backUrl}/dashboard/finance`,
       },
       auto_return: 'approved',
       notification_url: `${backUrl}/api/billing/webhook`, // Endpoint para webhooks
@@ -755,10 +839,19 @@ app.post('/api/billing/webhook', async (req, res) => {
     const eventBody = req.body || {};
     const eventQuery = req.query || {};
     // Mercado Pago pode enviar via query (?type=payment&id=123) e/ou JSON body.
+
+
+    // Validar assinatura do webhook
+    if (!verifyMercadoPagoSignature(req)) {
+      console.warn('Webhook Mercado Pago: Assinatura inválida ou ausente.');
+      return res.status(403).json({ error: 'Assinatura inválida.' });
+    }
+
+    // Mercado Pago pode enviar via query (?type=payment&id=123) e/ou JSON body.
     const topic = (eventQuery.type || eventBody.type || eventBody.topic || eventBody.action || '').toLowerCase();
     const resourceId = (eventQuery.id || eventBody.id || eventBody.data?.id || eventBody.resource?.id || '').toString();
 
-    console.log('📨 Webhook Mercado Pago recebido:', JSON.stringify({ topic, resourceId, raw: eventBody }));
+    console.log('📨 Webhook Mercado Pago recebido:', JSON.stringify({ topic, resourceId })); // Removido 'raw: eventBody'
 
     // Trata eventos de aprovação de assinatura (preapproval)
     if (topic.includes('preapproval')) {

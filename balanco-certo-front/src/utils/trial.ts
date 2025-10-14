@@ -9,16 +9,22 @@ export type TrialStatus = {
   trialEnd: Date;
 };
 
-export function getTrialStatus(createdAtISO: string, trialDays: number = 7): TrialStatus {
-  const createdAt = new Date(createdAtISO);
-  const trialEnd = new Date(createdAt.getTime() + trialDays * MS_PER_DAY);
-  const now = new Date();
+export function getTrialStatus(createdAtISO: string, trialEndsAtISO: string | null, trialDays: number = 7): TrialStatus {
+  const now = dayjs();
 
-  const diffDays = Math.ceil((trialEnd.getTime() - now.getTime()) / MS_PER_DAY);
-  const remainingDays = Math.max(0, diffDays);
-  const expired = now.getTime() >= trialEnd.getTime();
+  let trialEndDate: dayjs.Dayjs;
 
-  return { expired, remainingDays, trialEnd };
+  if (trialEndsAtISO) {
+    trialEndDate = dayjs(trialEndsAtISO);
+  } else {
+    const createdAt = dayjs(createdAtISO);
+    trialEndDate = createdAt.add(trialDays, 'day');
+  }
+
+  const expired = now.isAfter(trialEndDate);
+  const remainingDays = Math.max(0, trialEndDate.diff(now, 'day'));
+
+  return { expired, remainingDays, trialEnd: trialEndDate.toDate() };
 }
 
 export function daysBetween(from: Date, to: Date): number {

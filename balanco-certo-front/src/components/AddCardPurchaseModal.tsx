@@ -100,9 +100,36 @@ const AddCardPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Usuário não autenticado.");
-      const createdAtStr = session.user?.created_at;
+
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profileError || !profileData?.organization_id) {
+        console.error('Erro ao buscar organization_id do perfil:', profileError);
+        throw new Error("Não foi possível obter o ID da organização.");
+      }
+
+      const organizationId = profileData.organization_id;
+
+      const { data: organizationData, error: organizationError } = await supabase
+        .from('organizations')
+        .select('created_at, trial_ends_at')
+        .eq('id', organizationId)
+        .single();
+
+      if (organizationError || !organizationData) {
+        console.error('Erro ao buscar dados da organização:', organizationError);
+        throw new Error("Não foi possível obter os dados da organização.");
+      }
+
+      const createdAtStr = organizationData.created_at;
+      const trialEndsAtStr = organizationData.trial_ends_at;
+
       if (createdAtStr) {
-        const { expired } = getTrialStatus(createdAtStr);
+        const { expired } = getTrialStatus(createdAtStr, trialEndsAtStr);
         if (expired && !purchaseToEdit) {
           setError('Seu teste gratuito de 7 dias terminou. Para continuar criando novas compras, acesse Configurações Financeiras para regularizar seu plano.');
           setLoading(false);

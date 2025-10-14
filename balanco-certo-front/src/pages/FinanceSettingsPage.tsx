@@ -1,6 +1,6 @@
 // src/pages/FinanceSettingsPage.tsx
-import { useEffect, useState } from 'react';
-// import { Link } from 'react-router-dom';
+import { useEffect, useState, useCallback } from 'react';
+import { useLocation } from 'react-router-dom'; // Importar useLocation
 import axios from 'axios';
 import { supabase } from '../supabaseClient';
 import { getTrialStatus } from '../utils/trial';
@@ -28,15 +28,43 @@ const FinanceSettingsPage: React.FC = () => {
   const [trialExpired, setTrialExpired] = useState(false);
   const [remainingDays, setRemainingDays] = useState<number | null>(null);
   const [subscribing, setSubscribing] = useState(false);
+  const location = useLocation(); // Hook para acessar a URL
 
   useEffect(() => {
     const init = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return;
-        const createdAtStr = session.user?.created_at;
+
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('organization_id')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profileError || !profileData?.organization_id) {
+          console.error('Erro ao buscar organization_id do perfil:', profileError);
+          return;
+        }
+
+        const organizationId = profileData.organization_id;
+
+        const { data: organizationData, error: organizationError } = await supabase
+          .from('organizations')
+          .select('created_at, trial_ends_at')
+          .eq('id', organizationId)
+          .single();
+
+        if (organizationError || !organizationData) {
+          console.error('Erro ao buscar dados da organização:', organizationError);
+          return;
+        }
+
+        const createdAtStr = organizationData.created_at;
+        const trialEndsAtStr = organizationData.trial_ends_at;
+
         if (createdAtStr) {
-          const { expired, remainingDays } = getTrialStatus(createdAtStr);
+          const { expired, remainingDays } = getTrialStatus(createdAtStr, trialEndsAtStr);
           setTrialExpired(expired);
           setRemainingDays(remainingDays);
         }
@@ -55,9 +83,7 @@ const FinanceSettingsPage: React.FC = () => {
     init();
   }, []);
 
-  const invoices = transactions.filter(t => isInvoiceDescription(t.description));
-
-  const handleSubscribe = async () => {
+  const handleSubscribe = useCallback(async () => {
     try {
       setSubscribing(true);
       const { data: { session } } = await supabase.auth.getSession();
@@ -66,21 +92,40 @@ const FinanceSettingsPage: React.FC = () => {
         setSubscribing(false);
         return;
       }
-      const token = session.access_token;
-      const apiUrl = `${import.meta.env.VITE_API_BASE_URL}/api/billing/subscriptions/create`;
-      const resp = await axios.post(apiUrl, { /* plan_id, price opcional */ }, { headers: { 'Authorization': `Bearer ${token}` } });
-      const initPoint = resp?.data?.init_point;
-      if (initPoint) {
-        window.location.href = initPoint; // redireciona para o checkout do Mercado Pago
+
+      const { data: { url }, error: checkoutError } = await supabase.functions.invoke('create-mercadopago-checkout', {
+        body: { userId: session.user.id },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      if (checkoutError) {
+        console.error('Erro ao criar checkout do Mercado Pago:', checkoutError);
+        setError('Erro ao iniciar assinatura. Tente novamente.');
+        setSubscribing(false);
+        return;
+      }
+
+      if (url) {
+        window.location.href = url;
       } else {
-        setError('Não foi possível iniciar o checkout de assinatura.');
+        setError('URL de checkout não recebida.');
+        setSubscribing(false);
       }
     } catch (err) {
-      setError('Falha ao criar assinatura. Tente novamente em instantes.');
-    } finally {
+      console.error('Erro inesperado ao assinar:', err);
+      setError('Erro inesperado. Tente novamente.');
       setSubscribing(false);
     }
-  };
+  }, [setError, setSubscribing]);
+
+  const invoices = transactions.filter(t => isInvoiceDescription(t.description));
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    if (queryParams.get('action') === 'subscribe') {
+      handleSubscribe();
+    }
+  }, [location.search]);
 
   return (
     <div className="finance-settings">

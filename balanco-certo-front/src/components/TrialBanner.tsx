@@ -29,7 +29,7 @@ const TrialBanner: React.FC = () => {
           <>
             <span className="trial-title">Seu teste gratuito terminou.</span>
             <span className="trial-subtitle">Você pode continuar consultando seus dados, mas a criação de novas ações está bloqueada.</span>
-            <Link to="/dashboard/finance" className="trial-cta">Regularizar pagamento</Link>
+            <Link to="/dashboard/finance?action=subscribe" className="trial-cta">Regularizar pagamento</Link>
           </>
         ) : (
           <>

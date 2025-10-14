@@ -1,6 +1,7 @@
 // src/components/RecurringTransactionsModal.tsx
 // VERSÃO 100% COMPLETA E CORRIGIDA para usar o input de data nativo do HTMLimport { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useState} from 'react';
 import { getTrialStatus } from '../utils/trial';
 import { NumericFormat } from 'react-number-format';
 import { useAuth } from '../contexts/AuthContext';

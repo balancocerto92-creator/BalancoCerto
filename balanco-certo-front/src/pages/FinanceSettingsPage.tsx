@@ -22,7 +22,7 @@ const isInvoiceDescription = (description?: string): boolean => {
 };
 
 const FinanceSettingsPage: React.FC = () => {
-  const { session, organizationData, reloadOrganizationData } = useAuth();
+  const { session, organizationData } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

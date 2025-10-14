@@ -6,6 +6,7 @@ import axios from 'axios';
 import { supabase } from '../supabaseClient';
 import { getTrialStatus } from '../utils/trial';
 import { NumericFormat } from 'react-number-format';
+import { useAuth } from '../contexts/AuthContext';
 import './AddCardPurchaseModal.css';
 
 // Removemos tudo do 'react-datepicker'
@@ -49,6 +50,7 @@ const addMonthsToDateString = (dateStr: string, months: number): string => {
 };
 
 const AddCardPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose, onPurchaseAdded, cardId, categories, purchaseToEdit }) => {
+  const { session, organizationData } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [description, setDescription] = useState('');
@@ -98,32 +100,8 @@ const AddCardPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose
     setLoading(true);
     setError('');
     try {
-      const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Usuário não autenticado.");
-
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('organization_id')
-        .eq('id', session.user.id)
-        .single();
-
-      if (profileError || !profileData?.organization_id) {
-        console.error('Erro ao buscar organization_id do perfil:', profileError);
-        throw new Error("Não foi possível obter o ID da organização.");
-      }
-
-      const organizationId = profileData.organization_id;
-
-      const { data: organizationData, error: organizationError } = await supabase
-        .from('organizations')
-        .select('created_at, trial_ends_at')
-        .eq('id', organizationId)
-        .single();
-
-      if (organizationError || !organizationData) {
-        console.error('Erro ao buscar dados da organização:', organizationError);
-        throw new Error("Não foi possível obter os dados da organização.");
-      }
+      if (!organizationData) throw new Error("Dados da organização não disponíveis.");
 
       const createdAtStr = organizationData.created_at;
       const trialEndsAtStr = organizationData.trial_ends_at;
@@ -144,7 +122,7 @@ const AddCardPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose
         category_id: categoryId || null,
         credit_card_id: cardId,
         total_installments: isInstallment && totalInstallments ? parseInt(totalInstallments) : null,
-        current_installment: isInstallment && currentInstallment ? parseInt(currentInstallment) : null,
+        current_installment: isInstallment && currentInstallments ? parseInt(currentInstallments) : null,
       };
       if (purchaseToEdit) {
         await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/credit-card-purchases/${purchaseToEdit.id}`, purchaseData, { headers: { Authorization: `Bearer ${token}` } });

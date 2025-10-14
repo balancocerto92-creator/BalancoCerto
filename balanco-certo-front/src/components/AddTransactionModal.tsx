@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { supabase } from '../supabaseClient';
 import { getTrialStatus } from '../utils/trial';
+import { useAuth } from '../contexts/AuthContext';
 import './AddTransactionModal.css';
 
 // Helper seguro para converter qualquer valor de data em formato de input (YYYY-MM-DD)
@@ -64,6 +65,7 @@ interface AddTransactionModalProps {
 }
 
 const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClose, onTransactionAdded, transactionToEdit, categories }) => {
+  const { session, organizationData } = useAuth();
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [type, setType] = useState<'receita' | 'despesa'>('despesa');
@@ -133,32 +135,8 @@ const AddTransactionModal: React.FC<AddTransactionModalProps> = ({ isOpen, onClo
     setError('');
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Usuário não autenticado.");
-
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('organization_id')
-        .eq('id', session.user.id)
-        .single();
-
-      if (profileError || !profileData?.organization_id) {
-        console.error('Erro ao buscar organization_id do perfil:', profileError);
-        throw new Error("Não foi possível obter o ID da organização.");
-      }
-
-      const organizationId = profileData.organization_id;
-
-      const { data: organizationData, error: organizationError } = await supabase
-        .from('organizations')
-        .select('created_at, trial_ends_at')
-        .eq('id', organizationId)
-        .single();
-
-      if (organizationError || !organizationData) {
-        console.error('Erro ao buscar dados da organização:', organizationError);
-        throw new Error("Não foi possível obter os dados da organização.");
-      }
+      if (!organizationData) throw new Error("Dados da organização não disponíveis.");
 
       const createdAtStr = organizationData.created_at;
       const trialEndsAtStr = organizationData.trial_ends_at;

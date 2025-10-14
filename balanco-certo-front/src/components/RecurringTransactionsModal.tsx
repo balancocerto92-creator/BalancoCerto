@@ -5,6 +5,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { supabase } from '../supabaseClient';
 import { getTrialStatus } from '../utils/trial';
+import { useAuth } from '../contexts/AuthContext';
 import './RecurringTransactionsModal.css';
 
 // Removemos todas as dependências do react-datepicker
@@ -33,6 +34,7 @@ interface RecurringModalProps {
 const getTodayString = () => new Date().toISOString().split('T')[0];
 
 const RecurringTransactionsModal: React.FC<RecurringModalProps> = ({ isOpen, onClose, onRecurrenceChange, categories }) => {
+    const { session, organizationData } = useAuth();
     const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -48,7 +50,6 @@ const RecurringTransactionsModal: React.FC<RecurringModalProps> = ({ isOpen, onC
       setLoading(true);
       setError('');
       try {
-        const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error("Usuário não autenticado.");
         const token = session.access_token;
         const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/recurring-transactions`, { headers: { 'Authorization': `Bearer ${token}` } });
@@ -73,32 +74,8 @@ const RecurringTransactionsModal: React.FC<RecurringModalProps> = ({ isOpen, onC
       setLoading(true);
       setError('');
       try {
-        const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error("Usuário não autenticado.");
-
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('organization_id')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profileError || !profileData?.organization_id) {
-          console.error('Erro ao buscar organization_id do perfil:', profileError);
-          throw new Error("Não foi possível obter o ID da organização.");
-        }
-
-        const organizationId = profileData.organization_id;
-
-        const { data: organizationData, error: organizationError } = await supabase
-          .from('organizations')
-          .select('created_at, trial_ends_at')
-          .eq('id', organizationId)
-          .single();
-
-        if (organizationError || !organizationData) {
-          console.error('Erro ao buscar dados da organização:', organizationError);
-          throw new Error("Não foi possível obter os dados da organização.");
-        }
+        if (!organizationData) throw new Error("Dados da organização não disponíveis.");
 
         const createdAtStr = organizationData.created_at;
         const trialEndsAtStr = organizationData.trial_ends_at;
@@ -136,7 +113,6 @@ const RecurringTransactionsModal: React.FC<RecurringModalProps> = ({ isOpen, onC
     const handleDelete = async (id: string) => {
       if (!window.confirm("Tem certeza que deseja apagar esta regra de recorrência?")) return;
       try {
-        const { data: { session } } = await supabase.auth.getSession();
         if (!session) throw new Error("Usuário não autenticado.");
         const token = session.access_token;
         await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/recurring-transactions/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });

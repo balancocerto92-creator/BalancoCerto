@@ -1,14 +1,10 @@
 // src/components/RecurringTransactionsModal.tsx
-// VERSÃO 100% COMPLETA E CORRIGIDA para usar o input de data nativo do HTML
-
-import { useState, useEffect } from 'react';
+// VERSÃO 100% COMPLETA E CORRIGIDA para usar o input de data nativo do HTMLimport { useState, useEffect } from 'react';
 import axios from 'axios';
-import { supabase } from '../supabaseClient';
 import { getTrialStatus } from '../utils/trial';
+import { NumericFormat } from 'react-number-format';
 import { useAuth } from '../contexts/AuthContext';
-import './RecurringTransactionsModal.css';
-
-// Removemos todas as dependências do react-datepicker
+import './RecurringTransactionsModal.css';// Removemos todas as dependências do react-datepicker
 
 type Category = { id: string; name: string; };
 

@@ -3,7 +3,6 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { supabase } from '../supabaseClient';
 import { getTrialStatus } from '../utils/trial';
 import { NumericFormat } from 'react-number-format';
 import { useAuth } from '../contexts/AuthContext';
@@ -122,7 +121,7 @@ const AddCardPurchaseModal: React.FC<AddPurchaseModalProps> = ({ isOpen, onClose
         category_id: categoryId || null,
         credit_card_id: cardId,
         total_installments: isInstallment && totalInstallments ? parseInt(totalInstallments) : null,
-        current_installment: isInstallment && currentInstallments ? parseInt(currentInstallments) : null,
+        current_installment: isInstallment && currentInstallment ? parseInt(currentInstallment) : null,
       };
       if (purchaseToEdit) {
         await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/credit-card-purchases/${purchaseToEdit.id}`, purchaseData, { headers: { Authorization: `Bearer ${token}` } });

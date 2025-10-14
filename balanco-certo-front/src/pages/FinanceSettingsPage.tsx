@@ -1,10 +1,10 @@
-// src/pages/FinanceSettingsPage.tsx
 import { useEffect, useState, useCallback } from 'react';
-import { useLocation } from 'react-router-dom'; // Importar useLocation
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { supabase } from '../supabaseClient';
 import { getTrialStatus } from '../utils/trial';
 import './FinanceSettingsPage.css';
+import { useAuth } from '../contexts/AuthContext';
 
 type Transaction = {
   id: number;
@@ -22,71 +22,45 @@ const isInvoiceDescription = (description?: string): boolean => {
 };
 
 const FinanceSettingsPage: React.FC = () => {
+  const { session, organizationData, reloadOrganizationData } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [trialExpired, setTrialExpired] = useState(false);
-  const [remainingDays, setRemainingDays] = useState<number | null>(null);
   const [subscribing, setSubscribing] = useState(false);
-  const location = useLocation(); // Hook para acessar a URL
+  const location = useLocation();
+
+  const trialExpired = organizationData ? getTrialStatus(organizationData.created_at, organizationData.trial_ends_at).expired : false;
+  const remainingDays = organizationData ? getTrialStatus(organizationData.created_at, organizationData.trial_ends_at).remainingDays : null;
 
   useEffect(() => {
-    const init = async () => {
+    const fetchTransactions = async () => {
+      setLoading(true);
+      setError('');
+      if (!session) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) return;
-
-        const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
-          .select('organization_id')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profileError || !profileData?.organization_id) {
-          console.error('Erro ao buscar organization_id do perfil:', profileError);
-          return;
-        }
-
-        const organizationId = profileData.organization_id;
-
-        const { data: organizationData, error: organizationError } = await supabase
-          .from('organizations')
-          .select('created_at, trial_ends_at')
-          .eq('id', organizationId)
-          .single();
-
-        if (organizationError || !organizationData) {
-          console.error('Erro ao buscar dados da organização:', organizationError);
-          return;
-        }
-
-        const createdAtStr = organizationData.created_at;
-        const trialEndsAtStr = organizationData.trial_ends_at;
-
-        if (createdAtStr) {
-          const { expired, remainingDays } = getTrialStatus(createdAtStr, trialEndsAtStr);
-          setTrialExpired(expired);
-          setRemainingDays(remainingDays);
-        }
-        setLoading(true);
         const token = session.access_token;
         const resp = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/transactions`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         setTransactions(resp.data || []);
       } catch (err) {
-        setError('Não foi possível carregar suas faturas.');
+        console.error('Erro ao buscar transações:', err);
+        setError('Não foi possível carregar suas transações.');
       } finally {
         setLoading(false);
       }
     };
-    init();
-  }, []);
+
+    fetchTransactions();
+  }, [session]);
 
   const handleSubscribe = useCallback(async () => {
     try {
       setSubscribing(true);
-      const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         setError('Você precisa estar autenticado para assinar.');
         setSubscribing(false);
@@ -116,7 +90,7 @@ const FinanceSettingsPage: React.FC = () => {
       setError('Erro inesperado. Tente novamente.');
       setSubscribing(false);
     }
-  }, [setError, setSubscribing]);
+  }, [session, setError, setSubscribing]);
 
   const invoices = transactions.filter(t => isInvoiceDescription(t.description));
 
@@ -125,7 +99,7 @@ const FinanceSettingsPage: React.FC = () => {
     if (queryParams.get('action') === 'subscribe') {
       handleSubscribe();
     }
-  }, [location.search]);
+  }, [location.search, handleSubscribe]);
 
   return (
     <div className="finance-settings">

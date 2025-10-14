@@ -1,41 +1,94 @@
 // src/contexts/AuthContext.tsx
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { supabase } from '../supabaseClient';
 import type { Session } from '@supabase/supabase-js';
 
-// Define o tipo do valor que o contexto irá fornecer
+interface OrganizationData {
+  created_at: string;
+  trial_ends_at: string | null;
+}
+
 interface AuthContextType {
   session: Session | null;
   loading: boolean;
+  organizationData: OrganizationData | null;
+  reloadOrganizationData: () => Promise<void>;
 }
 
-// Cria o contexto com um valor padrão inicial
-const AuthContext = createContext<AuthContextType>({ session: null, loading: true });
+const AuthContext = createContext<AuthContextType>({ 
+  session: null, 
+  loading: true, 
+  organizationData: null, 
+  reloadOrganizationData: async () => {}
+});
 
-// Cria o Provedor do Contexto
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [organizationData, setOrganizationData] = useState<OrganizationData | null>(null);
+
+  const fetchOrganizationData = useCallback(async (userId: string) => {
+    try {
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('organization_id')
+        .eq('id', userId)
+        .single();
+
+      if (profileError || !profileData?.organization_id) {
+        console.error('Erro ao buscar organization_id do perfil:', profileError);
+        setOrganizationData(null);
+        return;
+      }
+
+      const organizationId = profileData.organization_id;
+
+      const { data: orgData, error: orgError } = await supabase
+        .from('organizations')
+        .select('created_at, trial_ends_at')
+        .eq('id', organizationId)
+        .single();
+
+      if (orgError || !orgData) {
+        console.error('Erro ao buscar dados da organização:', orgError);
+        setOrganizationData(null);
+        return;
+      }
+      setOrganizationData(orgData);
+    } catch (error) {
+      console.error('Erro geral ao buscar dados da organização:', error);
+      setOrganizationData(null);
+    }
+  }, []);
+
+  const reloadOrganizationData = useCallback(async () => {
+    if (session?.user?.id) {
+      await fetchOrganizationData(session.user.id);
+    }
+  }, [session?.user?.id, fetchOrganizationData]);
 
   useEffect(() => {
-    // onAuthStateChange é disparado imediatamente com a sessão inicial (se houver)
-    // e depois para cada mudança (login/logout). É a única fonte de verdade que precisamos.
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
+      setSession(currentSession);
+      if (currentSession?.user?.id) {
+        await fetchOrganizationData(currentSession.user.id);
+      } else {
+        setOrganizationData(null);
+      }
       setLoading(false);
     });
 
-    // Limpa a inscrição quando o componente é desmontado
     return () => subscription.unsubscribe();
-  }, []); // O array vazio garante que isso rode apenas uma vez
+  }, [fetchOrganizationData]);
 
   const value = {
     session,
     loading,
+    organizationData,
+    reloadOrganizationData,
   };
 
-  // Não renderiza nada até que o carregamento inicial da sessão seja concluído
   return (
     <AuthContext.Provider value={value}>
       {!loading && children}
@@ -43,7 +96,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-// Cria um hook customizado para usar o contexto facilmente
 export const useAuth = () => {
   return useContext(AuthContext);
 };

@@ -75,11 +75,11 @@ Deno.serve(async (req) => {
       payer: {
         email: 'test_user@example.com', // Replace with actual user email
       },
-      back_urls: {
-        success: 'https://your-frontend.com/success', // Replace with your success URL
-        pending: 'https://your-frontend.com/pending', // Replace with your pending URL
-        failure: 'https://your-frontend.com/failure', // Replace with your failure URL
-      },
+        back_urls: {
+          success: "https://balanco-certo.vercel.app/dashboard/finance",
+          failure: "https://balanco-certo.vercel.app/dashboard/finance",
+          pending: "https://balanco-certo.vercel.app/dashboard/finance",
+        },
       notification_url: 'https://your-supabase-function.com/webhook', // Replace with your webhook URL
       auto_return: 'approved',
     };

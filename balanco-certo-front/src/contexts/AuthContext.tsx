@@ -30,6 +30,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [organizationData, setOrganizationData] = useState<OrganizationData | null>(null);
 
   const fetchOrganizationData = useCallback(async (userId: string) => {
+    console.log('AuthContext.tsx: Starting fetchOrganizationData for userId:', userId);
     try {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -38,12 +39,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .single();
 
       if (profileError || !profileData?.organization_id) {
-        console.error('Erro ao buscar organization_id do perfil:', profileError);
+        console.error('AuthContext.tsx: Erro ao buscar organization_id do perfil:', profileError);
         setOrganizationData(null);
+        setLoading(false); // Ensure loading is set to false even on profile error
         return;
       }
 
       const organizationId = profileData.organization_id;
+      console.log('AuthContext.tsx: organizationId found:', organizationId);
 
       const { data: orgData, error: orgError } = await supabase
         .from('organizations')
@@ -52,19 +55,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .single();
 
       if (orgError || !orgData) {
-        console.error('Erro ao buscar dados da organização:', orgError);
+        console.error('AuthContext.tsx: Erro ao buscar dados da organização:', orgError);
         setOrganizationData(null);
+        setLoading(false); // Ensure loading is set to false even on organization data error
         return;
       }
       setOrganizationData(orgData);
+      console.log('AuthContext.tsx: Organization data fetched successfully:', orgData);
     } catch (error) {
-      console.error('Erro geral ao buscar dados da organização:', error);
+      console.error('AuthContext.tsx: Erro geral ao buscar dados da organização:', error);
       setOrganizationData(null);
+      setLoading(false); // Ensure loading is set to false on general error
     }
   }, []);
 
   const reloadOrganizationData = useCallback(async () => {
     if (session?.user?.id) {
+      console.log('AuthContext.tsx: Reloading organization data.');
       await fetchOrganizationData(session.user.id);
     }
   }, [session?.user?.id, fetchOrganizationData]);
@@ -80,9 +87,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         console.log('AuthContext.tsx: No user ID, clearing organization data.');
         setOrganizationData(null);
+        setLoading(false); // Ensure loading is set to false when no user ID
       }
-      setLoading(false);
-      console.log('AuthContext.tsx: Loading set to false.');
+      // setLoading(false); // This line was moved inside the if/else blocks for more precise control
+      // console.log('AuthContext.tsx: Loading set to false.');
     });
 
     return () => {

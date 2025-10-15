@@ -80,7 +80,15 @@ const FinanceSettingsPage: React.FC = () => {
       }
 
       if (url) {
-        window.location.href = url;
+        console.log('URL de redirecionamento do Mercado Pago:', url);
+        try {
+          new URL(url); // Tenta criar um objeto URL para validar
+          window.location.href = url;
+        } catch (e) {
+          console.error('URL do Mercado Pago inválida:', url, e);
+          setError('A URL de redirecionamento do Mercado Pago é inválida. Por favor, tente novamente ou contate o suporte.');
+          setSubscribing(false);
+        }
       } else {
         setError('URL de checkout não recebida.');
         setSubscribing(false);

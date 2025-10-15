@@ -87,10 +87,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         console.log('AuthContext.tsx: No user ID, clearing organization data.');
         setOrganizationData(null);
-        setLoading(false); // Ensure loading is set to false when no user ID
       }
-      // setLoading(false); // This line was moved inside the if/else blocks for more precise control
-      // console.log('AuthContext.tsx: Loading set to false.');
+      console.log('AuthContext.tsx: Setting loading to false after auth state change processing.');
+      setLoading(false);
     });
 
     return () => {

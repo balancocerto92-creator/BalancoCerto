@@ -3,6 +3,7 @@
 
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ToastProvider } from './contexts/ToastContext';
+import { useEffect } from 'react';
 
 // Importação de Componentes e Layouts
 import ProtectedRoute from './components/ProtectedRoute';
@@ -23,10 +24,19 @@ import FinanceSettingsPage from './pages/FinanceSettingsPage';
 
 
 // Importação do CSS global
-import './App.css'; 
+import './App.css';
 import CardDetailsPage from './pages/CardDetailsPage';
 
 function App() {
+  useEffect(() => {
+    console.log('App.tsx: App component mounted.');
+    return () => {
+      console.log('App.tsx: App component unmounted.');
+    };
+  }, []);
+
+  console.log('App.tsx: App component rendering...');
+
   return (
     <BrowserRouter>
       <ToastProvider>
@@ -38,18 +48,18 @@ function App() {
         <Route path="/confirmacao-email" element={<EmailConfirmationPage />} />
         <Route path="/esqueci-senha" element={<ForgotPasswordPage />} />
         <Route path="/reset-senha" element={<ResetPasswordPage />} />
-        
+
         {/* --- Rotas Protegidas (Área Logada) --- */}
-        <Route 
-          path="/dashboard" 
+        <Route
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <DashboardLayout />
             </ProtectedRoute>
           }
         >
-          <Route index element={<DashboardPage />} /> 
-          <Route path="transacoes" element={<TransacoesPage />} />      
+          <Route index element={<DashboardPage />} />
+          <Route path="transacoes" element={<TransacoesPage />} />
           <Route path="relatorios" element={<ReportsPage />} />
           <Route path="finance" element={<FinanceSettingsPage />} />
           <Route path="credit-cards" element={<CreditCardsPage />}/>

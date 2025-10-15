@@ -2,11 +2,20 @@
 // Versão atualizada em: 17 de Setembro de 2025
 import './LandingPage.css';
 import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
 
 // IMPORTANTE: Confirme se o nome do arquivo do seu logo está correto
 import logoBalançoCerto from '../assets/balanco-Certo-logo.png';
 
 const LandingPage = () => {
+  useEffect(() => {
+    console.log('LandingPage.tsx: LandingPage component mounted.');
+    return () => {
+      console.log('LandingPage.tsx: LandingPage component unmounted.');
+    };
+  }, []);
+
+  console.log('LandingPage.tsx: LandingPage component rendering...');
 
   return (
     <div className="landing-container dark-theme">

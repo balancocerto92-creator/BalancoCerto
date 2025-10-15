@@ -32,20 +32,27 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchOrganizationData = useCallback(async (userId: string) => {
     console.log('AuthContext.tsx: Starting fetchOrganizationData for userId:', userId);
     try {
+      console.log('AuthContext.tsx: Attempting to fetch profile data for userId:', userId);
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('organization_id')
         .eq('id', userId)
         .single();
 
-      if (profileError || !profileData?.organization_id) {
-        console.error('AuthContext.tsx: Erro ao buscar organization_id do perfil:', profileError);
+      if (profileError) {
+        console.error('AuthContext.tsx: Erro ao buscar profile data:', profileError);
         setOrganizationData(null);
         return;
       }
+      if (!profileData?.organization_id) {
+        console.warn('AuthContext.tsx: No organization_id found for profile:', userId);
+        setOrganizationData(null);
+        return;
+      }
+      console.log('AuthContext.tsx: Profile data fetched successfully. organization_id:', profileData.organization_id);
 
       const organizationId = profileData.organization_id;
-      console.log('AuthContext.tsx: organizationId found:', organizationId);
+      console.log('AuthContext.tsx: Attempting to fetch organization data for organizationId:', organizationId);
 
       const { data: orgData, error: orgError } = await supabase
         .from('organizations')
@@ -53,8 +60,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .eq('id', organizationId)
         .single();
 
-      if (orgError || !orgData) {
+      if (orgError) {
         console.error('AuthContext.tsx: Erro ao buscar dados da organização:', orgError);
+        setOrganizationData(null);
+        return;
+      }
+      if (!orgData) {
+        console.warn('AuthContext.tsx: No organization data found for organizationId:', organizationId);
         setOrganizationData(null);
         return;
       }

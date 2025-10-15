@@ -3,22 +3,21 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext'; // <-- USA NOSSO NOVO HOOK
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  // Pega a informação da sessão diretamente do nosso contexto central
   const { session, loading } = useAuth();
 
-  // Se ainda estivermos verificando a sessão, não mostramos nada
+  console.log('ProtectedRoute.tsx: Rendering ProtectedRoute. Session:', session, 'Loading:', loading);
+
   if (loading) {
-    return null; // ou um spinner de carregamento
+    console.log('ProtectedRoute.tsx: Loading is true, returning null.');
+    return null;
   }
 
-  // Se, após a verificação, não houver sessão, redireciona para o login
   if (!session) {
+    console.log('ProtectedRoute.tsx: No session found, redirecting to /login.');
     return <Navigate to="/login" />;
   }
 
-  // Não removemos o acesso após o período de teste.
-  
-  // Se houver uma sessão, renderiza a página filha
+  console.log('ProtectedRoute.tsx: Session found, rendering children.');
   return <>{children}</>;
 };
 

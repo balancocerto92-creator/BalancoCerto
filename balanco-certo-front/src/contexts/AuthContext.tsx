@@ -41,7 +41,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (profileError || !profileData?.organization_id) {
         console.error('AuthContext.tsx: Erro ao buscar organization_id do perfil:', profileError);
         setOrganizationData(null);
-        setLoading(false); // Ensure loading is set to false even on profile error
         return;
       }
 
@@ -57,7 +56,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (orgError || !orgData) {
         console.error('AuthContext.tsx: Erro ao buscar dados da organização:', orgError);
         setOrganizationData(null);
-        setLoading(false); // Ensure loading is set to false even on organization data error
         return;
       }
       setOrganizationData(orgData);
@@ -65,7 +63,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       console.error('AuthContext.tsx: Erro geral ao buscar dados da organização:', error);
       setOrganizationData(null);
-      setLoading(false); // Ensure loading is set to false on general error
+    } finally {
+      console.log('AuthContext.tsx: fetchOrganizationData finished. Setting loading to false.');
+      setLoading(false);
     }
   }, []);
 
@@ -82,14 +82,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log('AuthContext.tsx: Auth state changed. Event:', _event, 'Session:', currentSession);
       setSession(currentSession);
       if (currentSession?.user?.id) {
-        console.log('AuthContext.tsx: User ID found, fetching organization data.');
+        console.log('AuthContext.tsx: User ID found, initiating fetchOrganizationData.');
+        // fetchOrganizationData will set loading to false in its finally block
         await fetchOrganizationData(currentSession.user.id);
       } else {
-        console.log('AuthContext.tsx: No user ID, clearing organization data.');
+        console.log('AuthContext.tsx: No user ID, clearing organization data and setting loading to false.');
         setOrganizationData(null);
+        setLoading(false); // Ensure loading is set to false when no user ID
       }
-      console.log('AuthContext.tsx: Setting loading to false after auth state change processing.');
-      setLoading(false);
     });
 
     return () => {

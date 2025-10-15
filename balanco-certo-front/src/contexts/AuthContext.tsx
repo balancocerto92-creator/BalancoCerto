@@ -39,6 +39,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         .eq('id', userId)
         .single();
 
+      console.log('AuthContext.tsx: Supabase profile query result - data:', profileData, 'error:', profileError);
+
       if (profileError) {
         console.error('AuthContext.tsx: Erro ao buscar profile data:', profileError);
         setOrganizationData(null);

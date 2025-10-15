@@ -24,6 +24,7 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  console.log('AuthContext.tsx: AuthProvider component rendering...');
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [organizationData, setOrganizationData] = useState<OrganizationData | null>(null);
@@ -69,17 +70,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [session?.user?.id, fetchOrganizationData]);
 
   useEffect(() => {
+    console.log('AuthContext.tsx: AuthProvider useEffect for auth state change.');
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, currentSession) => {
+      console.log('AuthContext.tsx: Auth state changed. Event:', _event, 'Session:', currentSession);
       setSession(currentSession);
       if (currentSession?.user?.id) {
+        console.log('AuthContext.tsx: User ID found, fetching organization data.');
         await fetchOrganizationData(currentSession.user.id);
       } else {
+        console.log('AuthContext.tsx: No user ID, clearing organization data.');
         setOrganizationData(null);
       }
       setLoading(false);
+      console.log('AuthContext.tsx: Loading set to false.');
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      console.log('AuthContext.tsx: Auth state change subscription unsubscribed.');
+    };
   }, [fetchOrganizationData]);
 
   const value = {
